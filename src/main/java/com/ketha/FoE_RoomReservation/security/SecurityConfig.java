@@ -45,6 +45,7 @@ public class SecurityConfig {
 		return service;
 	}
 	
+	// Load the user from database and use that for data authentication
 	@Bean
 	public AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
