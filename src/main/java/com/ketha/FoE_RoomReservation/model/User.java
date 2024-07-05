@@ -1,11 +1,16 @@
 package com.ketha.FoE_RoomReservation.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 @Entity
 public class User {
@@ -21,6 +26,9 @@ public class User {
 	private UserType userType;
 	
 	public enum UserType {regularUser, admin, superAdmin}
+	
+	@OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Booking> bookings = new ArrayList<Booking>();
 	
 	public User() {
 		
