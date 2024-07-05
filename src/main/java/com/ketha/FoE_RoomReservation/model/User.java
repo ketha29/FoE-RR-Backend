@@ -11,8 +11,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 	
 	@Id
@@ -29,40 +35,4 @@ public class User {
 	
 	@OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Booking> bookings = new ArrayList<Booking>();
-	
-	public User() {
-		
-	}
-	
-	public User(String email, long phoneNo, String userName, String password, UserType userType) {
-		this.email = email;
-		this.phoneNo = phoneNo;
-		this.userName = userName;
-		this.password = password;
-		this.userType = userType;
-	}
-	
-	public int getUserId() {
-		return userId;
-	}
-	
-	public String getEmail() {
-		return email;
-	}
-	
-	public long getPhoneNo() {
-		return phoneNo;
-	}
-
-	public String getUserName() {
-		return userName;
-	}
-	
-	public String getPassword() {
-		return password;
-	}
-
-	public UserType getUserType() {
-		return userType;
-	}
 }

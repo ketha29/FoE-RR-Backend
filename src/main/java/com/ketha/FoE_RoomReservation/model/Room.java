@@ -9,8 +9,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Room {
 	
 	@Id
@@ -21,25 +27,4 @@ public class Room {
 	
 	@OneToMany(mappedBy = "roomId", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Booking> bookings = new ArrayList<Booking>();
-	
-	public Room() {
-		
-	}
-	
-	public Room(int capacity, String roomName) {
-		this.capacity = capacity;
-		this.roomName = roomName;
-	}
-	
-	public int getRoomId() {
-		return roomId;
-	}
-	
-	public int getCapacity() {
-		return capacity;
-	}
-
-	public String getRoomName() {
-		return roomName;
-	}
 }

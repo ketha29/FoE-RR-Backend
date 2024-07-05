@@ -12,8 +12,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Booking {
 	
 	@Id
@@ -34,46 +40,4 @@ public class Booking {
 	private User userId;
 	
 	public enum RecurrenceType {none, daily, weekly};
-	
-	public Booking() {
-		
-	}
-	
-	public Booking(Time startTime, Time endTime, Date date, RecurrenceType recurrence, int recurrencePeriod, Room roomId, User userId) {
-		this.startTime = startTime;
-		this.endTime = endTime;
-		this.date = date;
-		this.recurrence = recurrence;
-		this.recurrencePeriod = recurrencePeriod;
-		this.roomId = roomId;
-		this.userId = userId;
-	}
-	
-	public int getBookingId() {
-		return bookingId;
-	}
-
-	public Time getStartTime() {
-		return startTime;
-	}
-
-	public Time getEndTime() {
-		return endTime;
-	}
-
-	public Date getDate() {
-		return date;
-	}
-
-	public int getRecurrencePeriod() {
-		return recurrencePeriod;
-	}
-
-	public Room getRoomId() {
-		return roomId;
-	}
-
-	public User getUserId() {
-		return userId;
-	}
 }

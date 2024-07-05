@@ -26,7 +26,7 @@ public class UserController {
 		this.service = service;
 	}
 	
-	@GetMapping("/getUser")
+	@GetMapping("admin/getUser")
 	public List<User> getUser() {
 		return service.getUser();
 	}
