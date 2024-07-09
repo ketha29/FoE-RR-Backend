@@ -21,8 +21,8 @@ import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
 import com.ketha.FoE_RoomReservation.service.interfac.UserService;
+import com.ketha.FoE_RoomReservation.utils.Utils;
 
-import utils.Utils;
 
 @Service
 public class UserServiceImpl implements UserService{

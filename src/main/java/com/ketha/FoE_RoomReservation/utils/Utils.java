@@ -1,4 +1,4 @@
-package utils;
+package com.ketha.FoE_RoomReservation.utils;
 
 import com.ketha.FoE_RoomReservation.dto.UserDto;
 import com.ketha.FoE_RoomReservation.model.User;
