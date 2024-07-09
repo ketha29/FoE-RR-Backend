@@ -1,53 +1,65 @@
 package com.ketha.FoE_RoomReservation.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ketha.FoE_RoomReservation.dto.ResponseDto;
+import com.ketha.FoE_RoomReservation.dto.UserDto;
 import com.ketha.FoE_RoomReservation.model.User;
-import com.ketha.FoE_RoomReservation.service.UserService;
+import com.ketha.FoE_RoomReservation.service.impl.UserServiceImpl;
 
 @RestController
+@RequestMapping("/user")
 public class UserController {
 
-	UserService service;
+	private UserServiceImpl service;
 	
 	// Setter for dependency injection
 	// UserController has its UserService dependency set at the time of creation
 	@Autowired
-	public void setService(UserService service) {
+	public UserController(UserServiceImpl service) {
 		this.service = service;
 	}
 	
-	@GetMapping("admin/getUser")
-	public List<User> getUser() {
-		return service.getUser();
+	@GetMapping("/all")
+	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	public ResponseEntity<ResponseDto> getAllUsers() {
+		ResponseDto response =  service.getAllUsers();
+		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@GetMapping("/getUser/{userId}")
-	public User getUserById(@PathVariable int userId) {
-		return service.getUserById(userId);
+	@GetMapping("/get-by-id/{userId}")
+	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	public ResponseEntity<ResponseDto> getUserById(@PathVariable int userId) {
+		ResponseDto response =  service.getUserById(userId);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PostMapping("/registerUser")
-	public void addUser(@RequestBody User userDetails) {
-		service.addUser(userDetails);
+	@PostMapping("/register")
+	public ResponseEntity<ResponseDto> register(@RequestBody User user) {
+		ResponseDto response =  service.register(user);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PutMapping("/updateUser")
-	public void updateUser(@RequestBody User userDetails) {
-		service.updateUser(userDetails);
-	}
+//	@PutMapping("/updateUser")
+//	public void updateUser(@RequestBody User userDetails) {
+//		service.updateUser(userDetails);
+//	}
 	
-	@DeleteMapping("/deleteUser/{userId}")
-	public void deleteUser(@PathVariable int userId) {
-		service.deleteUser(userId);
+	@DeleteMapping("delete/{userId}")
+	public ResponseEntity<ResponseDto> deleteUser(@PathVariable int userId) {
+		ResponseDto response =  service.deleteUser(userId);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 }
