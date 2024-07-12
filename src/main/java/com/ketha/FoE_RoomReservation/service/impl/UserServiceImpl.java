@@ -53,10 +53,10 @@ public class UserServiceImpl implements UserService{
 			}
 			user.setPassword(passwordEncoder.encode(user.getPassword()));
 			User savedUser = repository.save(user);
-			UserDto userDto = Utils.mapUserEntityToUserDto(savedUser);
+			UserDto userDto = Utils.mapUserToUserDto(savedUser);
 			response.setStatusCode(200);
 			response.setMessage("Successsful");
-			response.setUserDto(userDto);
+			response.setUser(userDto);
 		} catch (CustomException e) {
 			response.setStatusCode(404);
             response.setMessage(e.getMessage());
@@ -96,16 +96,16 @@ public class UserServiceImpl implements UserService{
 			String userName = auth.getName();
 			User loginUser = repository.findByUserName(userName).orElseThrow(() -> new NotFoundException());
 			if(loginUser.getUserType().equals(UserType.admin)) {
-				List<User> users = repository.findUserByUserType(UserType.regularUser);
-				List<UserDto> userDto = users.stream().map((user) -> Utils.mapUserEntityToUserDto(user)).collect(Collectors.toList());
-				response.setUserList(userDto);
+				List<User> userList = repository.findUserByUserType(UserType.regularUser);
+				List<UserDto> userDtoList = userList.stream().map((user) -> Utils.mapUserToUserDto(user)).collect(Collectors.toList());
+				response.setUserList(userDtoList);
 				response.setStatusCode(200);
 				response.setMessage("Successsful");
 			}
 			else if(loginUser.getUserType().equals(UserType.superAdmin)) {
 				List<User> users = repository.findUserByUserType(UserType.admin);
 				users.addAll(repository.findUserByUserType(UserType.regularUser));
-				List<UserDto> userDto = users.stream().map((user) -> Utils.mapUserEntityToUserDto(user)).collect(Collectors.toList());
+				List<UserDto> userDto = users.stream().map((user) -> Utils.mapUserToUserDto(user)).collect(Collectors.toList());
 				response.setUserList(userDto);
 				response.setStatusCode(200);
 				response.setMessage("Successsful");
@@ -131,10 +131,10 @@ public class UserServiceImpl implements UserService{
 		ResponseDto response = new ResponseDto();
 		try {
 			User user = repository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
-			UserDto userDto = Utils.mapUserEntityToUserDto(user);
+			UserDto userDto = Utils.mapUserToUserDto(user);
 			response.setStatusCode(200);
 			response.setMessage("Successful");
-			response.setUserDto(userDto);
+			response.setUser(userDto);
 		} catch(CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage(e.getMessage());

@@ -24,7 +24,8 @@ public class Room {
 	private int roomId;
 	private int capacity;
 	private String roomName;
+	private String description;
 	
-	@OneToMany(mappedBy = "roomId", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Booking> bookings = new ArrayList<Booking>();
 }

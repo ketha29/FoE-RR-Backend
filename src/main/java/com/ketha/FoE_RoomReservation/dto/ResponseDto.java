@@ -15,7 +15,14 @@ public class ResponseDto {
 
 	private int StatusCode;
 	private String message;
+	
 	private UserType userType;
-	private UserDto userDto;
+	
+	private UserDto user;
+	private RoomDto room;
+	private BookingDto booking;
+	
 	private List<UserDto> userList;
+	private List<RoomDto> roomList;
+	private List<BookingDto> bookingList;
 }

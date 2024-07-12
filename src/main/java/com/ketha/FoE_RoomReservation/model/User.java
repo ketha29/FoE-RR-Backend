@@ -40,7 +40,7 @@ public class User {
 	
 	public enum UserType {regularUser, admin, superAdmin}
 	
-	@OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Booking> bookings = new ArrayList<Booking>();
 	
 	public Collection<? extends GrantedAuthority> getAuthorities() {

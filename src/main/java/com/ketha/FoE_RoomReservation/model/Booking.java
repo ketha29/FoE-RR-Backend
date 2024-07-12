@@ -34,10 +34,10 @@ public class Booking {
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "roomId")
-	private Room roomId;
+	private Room room;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "UserId")
-	private User userId;
+	private User user;
 	
 	public enum RecurrenceType {none, daily, weekly};
 }
