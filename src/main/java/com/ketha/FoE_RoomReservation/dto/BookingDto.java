@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class BookingDto {
 
-	private int bookingId;
+	private long bookingId;
 	private Time startTime;
 	private Time endTime;
 	private Date date;

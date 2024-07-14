@@ -12,7 +12,7 @@ public interface UserService {
 
 	ResponseDto login(LoginDto loginDto);
 
-	ResponseDto getUserById(int userId);
+	ResponseDto getUserById(long userId);
 
-	ResponseDto deleteUser(int userId);
+	ResponseDto deleteUser(long userId);
 }

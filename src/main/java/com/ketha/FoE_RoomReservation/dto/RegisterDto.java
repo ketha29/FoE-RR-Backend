@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegisterDto {
 
-	private int userId;
+	private long userId;
 	private String email;
 	private long phoneNo;
 	private String userName;

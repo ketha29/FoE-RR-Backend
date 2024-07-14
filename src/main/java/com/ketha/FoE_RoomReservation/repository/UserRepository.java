@@ -10,7 +10,7 @@ import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Integer> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByUserName(String userName);
 	Boolean existsByUserName(String userName);

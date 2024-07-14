@@ -12,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,7 +25,7 @@ public class Booking {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int bookingId;
+	private long bookingId;
 	private Time startTime;
 	private Time endTime;
 	private Date date;
@@ -32,6 +33,9 @@ public class Booking {
 	private RecurrenceType recurrence;
 	private int recurrencePeriod;
 	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "eventId")
+	private Event event;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "roomId")
 	private Room room;

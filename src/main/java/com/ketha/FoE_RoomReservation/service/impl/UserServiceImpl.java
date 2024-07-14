@@ -114,20 +114,19 @@ public class UserServiceImpl implements UserService{
 				response.setStatusCode(403);
 				response.setMessage("Premission not allowed");
 			}
-			
-			} catch(NotFoundException e) {
-				response.setStatusCode(404);
-				response.setMessage("User not found: " + e.getMessage());
-			} catch(Exception e) {
-				response.setStatusCode(500);
-				response.setMessage("Error getting all users: " + e.getMessage());
-			}
-			return response;
+		} catch(NotFoundException e) {
+			response.setStatusCode(404);
+			response.setMessage("User not found: " + e.getMessage());
+		} catch(Exception e) {
+			response.setStatusCode(500);
+			response.setMessage("Error getting all users: " + e.getMessage());
+		}
+		return response;
 	}
 
 	// Get a user using the userId
 	@Override
-	public ResponseDto getUserById(int userId) {
+	public ResponseDto getUserById(long userId) {
 		ResponseDto response = new ResponseDto();
 		try {
 			User user = repository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
@@ -153,7 +152,7 @@ public class UserServiceImpl implements UserService{
 
 	// Find the user object using the userId, and delete that user object
 	@Override
-	public ResponseDto deleteUser(int userId) {
+	public ResponseDto deleteUser(long userId) {
 		ResponseDto response = new ResponseDto();
 		try {
 			repository.findById(userId).orElseThrow(() -> new CustomException("User not found"));

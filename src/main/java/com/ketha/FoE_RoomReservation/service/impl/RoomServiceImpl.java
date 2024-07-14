@@ -44,7 +44,7 @@ public class RoomServiceImpl implements RoomService{
 	}
 
 	@Override
-	public ResponseDto getRoomById(int roomId) {
+	public ResponseDto getRoomById(long roomId) {
 		ResponseDto response = new ResponseDto();
 		
 		try {
@@ -102,7 +102,7 @@ public class RoomServiceImpl implements RoomService{
 	}
 
 	@Override
-	public ResponseDto deleteRoom(int roomId) {
+	public ResponseDto deleteRoom(long roomId) {
 		ResponseDto response = new ResponseDto();
 		
 		try {
@@ -123,7 +123,7 @@ public class RoomServiceImpl implements RoomService{
 	}
 
 	@Override
-	public ResponseDto updateRoom(int roomId, Integer capacity, String roomName, String description) {
+	public ResponseDto updateRoom(long roomId, Integer capacity, String roomName, String description) {
 		ResponseDto response = new ResponseDto();
 
 		try {

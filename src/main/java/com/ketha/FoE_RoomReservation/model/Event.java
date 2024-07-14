@@ -17,15 +17,12 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Room {
-	
+public class Event {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long roomId;
-	private int capacity;
-	private String roomName;
-	private String description;
+	private long eventId;
 	
-	@OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Booking> bookings = new ArrayList<Booking>();
 }
