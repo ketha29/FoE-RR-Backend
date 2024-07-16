@@ -66,7 +66,7 @@ public class RoomServiceImpl implements RoomService{
 	@Override
 	public ResponseDto getAvailableRoomsByDate(Time startTime, Time endTime, Date date) {
 		ResponseDto response = new ResponseDto();
-
+		// TODO not working properly
 		try {
 			List<Room> roomList = roomRepository.findAvailableRoomsByDate(startTime, endTime, date);
 			List<RoomDto> roomDtoList = Utils.mapRoomListToRoomListDto(roomList);

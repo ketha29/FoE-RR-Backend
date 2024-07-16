@@ -6,12 +6,14 @@ import java.util.List;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UserDto {
 
 	private long userId;
@@ -19,5 +21,6 @@ public class UserDto {
 	private long phoneNo;
 	private String userName;
 	private UserType userType;
+	@Builder.Default
 	private List<BookingDto> bookings = new ArrayList<>();
 }

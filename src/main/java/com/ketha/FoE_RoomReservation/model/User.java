@@ -16,7 +16,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -24,6 +26,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
+@Table(name = "users")
 public class User {
 	
 	@Id
@@ -41,6 +45,7 @@ public class User {
 	public enum UserType {regularUser, admin, superAdmin}
 	
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Builder.Default
 	private List<Booking> bookings = new ArrayList<Booking>();
 	
 	public Collection<? extends GrantedAuthority> getAuthorities() {

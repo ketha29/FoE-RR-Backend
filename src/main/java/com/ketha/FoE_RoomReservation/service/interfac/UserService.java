@@ -15,4 +15,6 @@ public interface UserService {
 	ResponseDto getUserById(long userId);
 
 	ResponseDto deleteUser(long userId);
+
+	ResponseDto getUserBookings(long userId);
 }

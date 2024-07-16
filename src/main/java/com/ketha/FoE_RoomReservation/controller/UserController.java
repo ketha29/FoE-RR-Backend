@@ -40,13 +40,21 @@ public class UserController {
 	}
 	
 	@GetMapping("/get-by-id/{userId}")
-	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
-	public ResponseEntity<ResponseDto> getUserById(@PathVariable int userId) {
+//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	public ResponseEntity<ResponseDto> getUserById(@PathVariable long userId) {
 		ResponseDto response =  service.getUserById(userId);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
+	@GetMapping("/get-user-bookings/{userId}")
+	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	public ResponseEntity<ResponseDto> getUserBookings(@PathVariable long userId) {
+		ResponseDto response =  service.getUserBookings(userId);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
+	}
+	
 	@PostMapping("/register")
+//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> register(@RequestBody User user) {
 		ResponseDto response =  service.register(user);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
@@ -58,7 +66,8 @@ public class UserController {
 //	}
 	
 	@DeleteMapping("delete/{userId}")
-	public ResponseEntity<ResponseDto> deleteUser(@PathVariable int userId) {
+//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	public ResponseEntity<ResponseDto> deleteUser(@PathVariable long userId) {
 		ResponseDto response =  service.deleteUser(userId);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}

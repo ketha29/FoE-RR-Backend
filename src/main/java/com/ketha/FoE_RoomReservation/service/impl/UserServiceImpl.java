@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,11 +13,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException.BadRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ketha.FoE_RoomReservation.dto.LoginDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.dto.UserDto;
+import com.ketha.FoE_RoomReservation.exception.BadRequestException;
 import com.ketha.FoE_RoomReservation.exception.CustomException;
+import com.ketha.FoE_RoomReservation.exception.ForbiddenException;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
@@ -27,42 +32,49 @@ import com.ketha.FoE_RoomReservation.utils.Utils;
 @Service
 public class UserServiceImpl implements UserService{
 	
-	private UserRepository repository;
+	private UserRepository userRepository;
 	private PasswordEncoder passwordEncoder;
 	private AuthenticationManager authenticationManager;
 	
 	// Setter for dependency injection
 	// UserService has its UserRepository dependency set at the time of creation
 	@Autowired
-	public UserServiceImpl(UserRepository repository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
-		this.repository = repository;
+	public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.authenticationManager = authenticationManager;
 	}
 	
 	// Register user
 	@Override
+	// TODO super admin can assign admins but admin can imly assign regular user
 	public ResponseDto register(User user) {
 		ResponseDto response = new ResponseDto();
 		try {
 			if(user.getUserType() == null) {
 				user.setUserType(UserType.regularUser);
 			}
-			if (repository.existsByUserName(user.getUserName())) {
+			if(userRepository.existsByUserName(user.getUserName())) {
 				throw new CustomException(user.getUserName() + " Already exists");
 			}
+			if(user.getUserName() == null || user.getUserName().isBlank() || user.getPassword() == null || user.getPassword().isBlank()) {
+	            throw new BadRequestException("User name or password shouldn't be empty");
+			}
 			user.setPassword(passwordEncoder.encode(user.getPassword()));
-			User savedUser = repository.save(user);
+			User savedUser = userRepository.save(user);
 			UserDto userDto = Utils.mapUserToUserDto(savedUser);
 			response.setStatusCode(200);
-			response.setMessage("Successsful");
+			response.setMessage("User added successfully");
 			response.setUser(userDto);
 		} catch (CustomException e) {
 			response.setStatusCode(404);
             response.setMessage(e.getMessage());
+		} catch (BadRequestException e) {
+	        response.setStatusCode(400);
+	        response.setMessage("Bad request: " + e.getMessage());
 		} catch (Exception e) {
 			response.setStatusCode(500);
-            response.setMessage("Error occurred during User registration " + e.getMessage());
+            response.setMessage("Error occurred during User registration: " + e.getMessage());
 		}
 		return response;
 	}
@@ -71,14 +83,16 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public ResponseDto login(LoginDto loginDto) {
 		ResponseDto response = new ResponseDto();
+		
 		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUserName(), loginDto.getPassword()));
-			User user = repository.findByUserName(loginDto.getUserName()).orElseThrow(() -> new BadCredentialsException(null));
+			User user = userRepository.findByUserName(loginDto.getUserName()).orElseThrow(() -> new BadCredentialsException(null));
 			response.setUserType(user.getUserType());
 			response.setStatusCode(200);
 			response.setMessage("User login successful");
+			
 		} catch (BadCredentialsException e) {
-	        response.setStatusCode(401);
+	        response.setStatusCode(400);
 	        response.setMessage("Invalid credentials: " + e.getMessage());
 	    } catch (Exception e) {
 			response.setStatusCode(500);
@@ -91,61 +105,111 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public ResponseDto getAllUsers() {
 		ResponseDto response = new ResponseDto();
+		
 		try {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			String userName = auth.getName();
-			User loginUser = repository.findByUserName(userName).orElseThrow(() -> new NotFoundException());
+			String loginUserName = auth.getName();
+			User loginUser = userRepository.findByUserName(loginUserName).orElseThrow(() -> new CustomException("NotFound"));
+			
+			List<User> userList = null;
 			if(loginUser.getUserType().equals(UserType.admin)) {
-				List<User> userList = repository.findUserByUserType(UserType.regularUser);
-				List<UserDto> userDtoList = userList.stream().map((user) -> Utils.mapUserToUserDto(user)).collect(Collectors.toList());
-				response.setUserList(userDtoList);
-				response.setStatusCode(200);
-				response.setMessage("Successsful");
+				userList = userRepository.findUserByUserType(UserType.regularUser);
+			} else if(loginUser.getUserType().equals(UserType.superAdmin)) {
+				userList = userRepository.findUserByUserType(UserType.admin);
+				userList.addAll(userRepository.findUserByUserType(UserType.regularUser));
+			} else {
+				throw new ForbiddenException("Forbidden");
 			}
-			else if(loginUser.getUserType().equals(UserType.superAdmin)) {
-				List<User> users = repository.findUserByUserType(UserType.admin);
-				users.addAll(repository.findUserByUserType(UserType.regularUser));
-				List<UserDto> userDto = users.stream().map((user) -> Utils.mapUserToUserDto(user)).collect(Collectors.toList());
-				response.setUserList(userDto);
-				response.setStatusCode(200);
-				response.setMessage("Successsful");
-			}
-			else {
-				response.setStatusCode(403);
-				response.setMessage("Premission not allowed");
-			}
-		} catch(NotFoundException e) {
+			
+			List<UserDto> userDto = userList.stream().map((user) -> Utils.mapUserToUserDto(user)).collect(Collectors.toList());
+			response.setUserList(userDto);
+			response.setStatusCode(200);
+			response.setMessage("Successsful");
+			
+		} catch(CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage("User not found: " + e.getMessage());
+		} catch(ForbiddenException e) {
+			response.setStatusCode(403);
+			response.setMessage("Permission not allowed: " + e.getMessage());
 		} catch(Exception e) {
 			response.setStatusCode(500);
 			response.setMessage("Error getting all users: " + e.getMessage());
 		}
 		return response;
 	}
-
+	
 	// Get a user using the userId
 	@Override
 	public ResponseDto getUserById(long userId) {
 		ResponseDto response = new ResponseDto();
+		
 		try {
-			User user = repository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
-			UserDto userDto = Utils.mapUserToUserDto(user);
-			response.setStatusCode(200);
-			response.setMessage("Successful");
-			response.setUser(userDto);
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			String loginUserName = auth.getName();
+			User loginUser = userRepository.findByUserName(loginUserName).orElseThrow(() -> new CustomException("NotFound"));
+			
+			User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
+			UserDto userDto;
+			if((loginUser.getUserType().equals(UserType.admin) && user.getUserType().equals(UserType.regularUser)) ||
+					(loginUser.getUserType().equals(UserType.superAdmin) && ((user.getUserType().equals(UserType.regularUser)) || (user.getUserType().equals(UserType.admin))))) {
+				userDto = Utils.mapUserToUserDto(user);
+				response.setStatusCode(200);
+				response.setMessage("Successful");
+				response.setUser(userDto);
+			} else {
+				throw new ForbiddenException("Forbidden");
+			}
+			
 		} catch(CustomException e) {
 			response.setStatusCode(404);
-			response.setMessage(e.getMessage());
+			response.setMessage("User not found: " + e.getMessage());
+		} catch(ForbiddenException e) {
+			response.setStatusCode(404);
+			response.setMessage("Permission not allowed: " + e.getMessage());
 		} catch(Exception e) {
 			response.setStatusCode(500);
-			response.setMessage("Error in getting user: " + e.getMessage());
+			response.setMessage("Error getting the user: " + e.getMessage());
+		}
+		return response;
+	}
+	
+	@Override
+	public ResponseDto getUserBookings(long userId) {
+		ResponseDto response = new ResponseDto();
+		
+		try {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			String loginUserName = auth.getName();
+			User loginUser = userRepository.findByUserName(loginUserName).orElseThrow(() -> new CustomException("NotFound"));
+			
+			User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
+			UserDto userDto;
+			if((loginUser.getUserType().equals(UserType.admin) && user.getUserType().equals(UserType.regularUser)) ||
+					(loginUser.getUserType().equals(UserType.superAdmin) && ((user.getUserType().equals(UserType.regularUser)) || (user.getUserType().equals(UserType.admin))))) {
+				userDto = Utils.mapUserToUserEntityPlusBookings(user);
+				response.setStatusCode(200);
+				response.setMessage("Successful");
+				response.setUser(userDto);
+			} else {
+				throw new ForbiddenException("Forbidden");
+			}
+			
+		} catch(CustomException e) {
+			response.setStatusCode(404);
+			response.setMessage("User not found: " + e.getMessage());
+		} catch(ForbiddenException e) {
+			response.setStatusCode(404);
+			response.setMessage("Permission not allowed: " + e.getMessage());
+		} catch(Exception e) {
+			response.setStatusCode(500);
+			response.setMessage("Error getting the user: " + e.getMessage());
 		}
 		return response;
 	}
 	
 	
-//	// Update the details of an existing user object
+	// Update the details of an existing user object
 //	public void updateUser(User user) {
 //		repository.save(user);
 //	}
@@ -155,8 +219,8 @@ public class UserServiceImpl implements UserService{
 	public ResponseDto deleteUser(long userId) {
 		ResponseDto response = new ResponseDto();
 		try {
-			repository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
-			repository.deleteById(userId);
+			userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
+			userRepository.deleteById(userId);
 			response.setStatusCode(200);
 			response.setMessage("Successful");
 		} catch(CustomException e) {

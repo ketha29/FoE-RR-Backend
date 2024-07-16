@@ -58,8 +58,8 @@ public class RoomController {
 			response.setMessage("These fields(startTime, endTime, date) shouldn't be empty");
 			return ResponseEntity.status(response.getStatusCode()).body(response);
 		}
-		Time startTime = Time.valueOf(LocalTime.parse(startTimeStr, DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSS")));
-        Time endTime = Time.valueOf(LocalTime.parse(endTimeStr, DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSS")));
+		Time startTime = Time.valueOf(LocalTime.parse(startTimeStr, DateTimeFormatter.ofPattern("HH:mm:ss")));
+        Time endTime = Time.valueOf(LocalTime.parse(endTimeStr, DateTimeFormatter.ofPattern("HH:mm:ss")));
 		ResponseDto response = roomService.getAvailableRoomsByDate(startTime, endTime, date);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
