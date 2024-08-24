@@ -49,62 +49,43 @@ public class UserServiceTest {
     @InjectMocks
     private UserServiceImpl userService;
 
-    private User user = User.builder()
+    private User user;
+    private User admin;
+    private User superAdmin;
+    private User regularUser1;
+    private User regularUser2;
+    
+    @BeforeEach
+    public void setUp() {
+		SecurityContextHolder.setContext(securityContext);
+		
+		user = User.builder()
                 .email("e20199@eng.pdn.ac.lk")
                 .phoneNo(0771233456)
                 .userName("e20199")
                 .password("password")
                 .userType(UserType.admin)
                 .build();
-  
-//    private User admin;
-//    private User superAdmin;
-//    private User regularUser1;
-//    private User regularUser2;
-    private User admin = User.builder()
-    					.userName("adminUser")
-    					.userType(UserType.admin)
-    					.build();
-    
-    private User superAdmin = User.builder()
-							.userName("superAdminUser")
-							.userType(UserType.superAdmin)
-							.build();
-    
-    private User regularUser1 = User.builder()
+                
+		admin = User.builder()
+					.userName("adminUser")
+					.userType(UserType.admin)
+					.build();
+
+		superAdmin = User.builder()
+						.userName("superAdminUser")
+						.userType(UserType.superAdmin)
+						.build();
+
+		regularUser1 = User.builder()
 							.userName("regularUser1")
 							.userType(UserType.regularUser)
 							.build();
-    
-    private User regularUser2 = User.builder()
+
+		regularUser2 = User.builder()
 							.userName("regularUser2")
 							.userType(UserType.regularUser)
 							.build();
-    
-    @BeforeEach
-    public void setUp() {
-		SecurityContextHolder.setContext(securityContext);
-		
-		
-//		User admin = User.builder()
-//					.userName("adminUser")
-//					.userType(UserType.admin)
-//					.build();
-//
-//		User superAdmin = User.builder()
-//						.userName("superAdminUser")
-//						.userType(UserType.superAdmin)
-//						.build();
-//
-//		User regularUser1 = User.builder()
-//							.userName("regularUser1")
-//							.userType(UserType.regularUser)
-//							.build();
-//
-//		User regularUser2 = User.builder()
-//							.userName("regularUser2")
-//							.userType(UserType.regularUser)
-//							.build();
     }
 
     @Test

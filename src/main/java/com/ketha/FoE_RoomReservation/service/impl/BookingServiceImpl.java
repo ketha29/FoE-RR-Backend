@@ -1,6 +1,8 @@
 package com.ketha.FoE_RoomReservation.service.impl;
 
 import java.sql.Date;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -79,6 +81,7 @@ public class BookingServiceImpl implements BookingService{
 	}
 	
 	@Override
+	// TODO verify that the login user id corresponds with the userId
 	public ResponseDto addBooking(long userId, long roomId, Booking bookingRequest) {
 		ResponseDto response = new ResponseDto();
 		
@@ -116,7 +119,7 @@ public class BookingServiceImpl implements BookingService{
 		        }
 			} else {
 				response.setStatusCode(403);
-	            response.setMessage("Forbidden: not allwed to book with these specification");
+	            response.setMessage("Forbidden: not allowed to book with these specification");
 			}
 		} catch(CustomException e) {
 			response.setStatusCode(404);
@@ -190,7 +193,6 @@ public class BookingServiceImpl implements BookingService{
 				}
 				break;
 		}
-//		System.out.println(availableDateList);
 		return availableDateList;
 	}
 	
@@ -210,25 +212,34 @@ public class BookingServiceImpl implements BookingService{
 				);
 	}
 	
+	// Check if the user is allowed to book with his requirements 
 	private boolean allowToBook(Booking bookingRequest, User user, List<Date> availableDateList) {
 		boolean allow = false;
-		boolean available = true;
-		Calendar calendar = Calendar.getInstance();
+        boolean available = true;
+        Calendar calendar = Calendar.getInstance();
 
-		if(user.getUserType() == UserType.regularUser) {
-			// TODO check the booking dates for week ends and booking time
-//			for(Date date : availableDateList) {
-//				calendar.setTime(date);
-//				if((calendar.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY) || (calendar.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY)) {
-//					available = false;
-//					break;
-//				}
-//			}
-			if(available && (bookingRequest.getRecurrence() == RecurrenceType.none) || 
-				((bookingRequest.getRecurrence() == RecurrenceType.daily) && (bookingRequest.getRecurrencePeriod() <= 3)) ||
-				((bookingRequest.getRecurrence() == RecurrenceType.weekly) && (bookingRequest.getRecurrencePeriod() <= 4))) {
-					allow = true;
-			}
+        if(user.getUserType() == UserType.regularUser) {
+            // Check the booking dates for weekdays and booking time between 8 AM to 5 PM
+        	// TODO use external calendar api to get the academic days
+            for(Date date : availableDateList) {
+                calendar.setTime(date);
+                int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+                if(dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
+                    available = false;
+                    break;
+                }  
+                if(bookingRequest.getStartTime().toLocalTime().isBefore(LocalTime.parse("08:00:00")) || 
+                		bookingRequest.getEndTime().toLocalTime().isAfter(LocalTime.parse("17:00:00"))) {
+                    available = false;
+                    break;
+                }
+            }
+
+            if(available && (bookingRequest.getRecurrence() == RecurrenceType.none) || 
+                ((bookingRequest.getRecurrence() == RecurrenceType.daily) && (bookingRequest.getRecurrencePeriod() <= 3)) ||
+                ((bookingRequest.getRecurrence() == RecurrenceType.weekly) && (bookingRequest.getRecurrencePeriod() <= 4))) {
+                allow = true;
+            }
 		} else if(user.getUserType() == UserType.admin) {
 			if((bookingRequest.getRecurrence() == RecurrenceType.none) || 
 				((bookingRequest.getRecurrence() == RecurrenceType.daily) && (bookingRequest.getRecurrencePeriod() <= 7)) ||

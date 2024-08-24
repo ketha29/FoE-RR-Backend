@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +20,7 @@ import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.model.Booking;
 import com.ketha.FoE_RoomReservation.service.impl.BookingServiceImpl;
 
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/booking")
 public class BookingController {
@@ -36,6 +39,7 @@ public class BookingController {
 	}
 	
 	@GetMapping("/get-by-date")
+//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> getBookingByDate(
 			@RequestParam(value = "date", required = false) Date date
 	) {
@@ -49,7 +53,7 @@ public class BookingController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PostMapping("/add/{userId}/{roomId}")
+	@PostMapping("/add-booking/{userId}/{roomId}")
 	public ResponseEntity<ResponseDto> addBooking(
 			@PathVariable int userId,
 			@PathVariable int roomId,

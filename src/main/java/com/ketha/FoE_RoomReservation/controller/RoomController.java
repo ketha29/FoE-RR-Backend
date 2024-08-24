@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +23,7 @@ import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.model.Room;
 import com.ketha.FoE_RoomReservation.service.impl.RoomServiceImpl;
 
-
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/room")
 public class RoomController {
@@ -65,7 +66,6 @@ public class RoomController {
 	}
 	
 	@PostMapping("/add")
-//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> addRoom(
 			@RequestParam(value = "capacity", required = false) Integer capacity,
 			@RequestParam(value = "roomName", required = false) String roomName,

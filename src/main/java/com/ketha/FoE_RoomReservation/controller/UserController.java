@@ -40,7 +40,7 @@ public class UserController {
 	}
 	
 	@GetMapping("/get-by-id/{userId}")
-//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> getUserById(@PathVariable long userId) {
 		ResponseDto response =  service.getUserById(userId);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
