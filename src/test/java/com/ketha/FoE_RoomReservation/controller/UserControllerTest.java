@@ -91,7 +91,7 @@ public class UserControllerTest {
         response.andExpect(MockMvcResultMatchers.status().isCreated())
         		.andExpect(MockMvcResultMatchers.jsonPath("$.email", CoreMatchers.is(user.getEmail())))
         		.andExpect(MockMvcResultMatchers.jsonPath("$.phoneNo", CoreMatchers.is(user.getPhoneNo())))
-        		.andExpect(MockMvcResultMatchers.jsonPath("$.userName", CoreMatchers.is(user.getUserName())))
+        		.andExpect(MockMvcResultMatchers.jsonPath("$.userName", CoreMatchers.is(user.getUsername())))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.password").doesNotExist())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.userType", CoreMatchers.is(user.getUserType().toString())));
     }

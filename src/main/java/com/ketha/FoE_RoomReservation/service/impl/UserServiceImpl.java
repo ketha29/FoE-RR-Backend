@@ -11,12 +11,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException.BadRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.ketha.FoE_RoomReservation.dto.LoginDto;
+import com.ketha.FoE_RoomReservation.dto.LoginResponseDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.dto.UserDto;
 import com.ketha.FoE_RoomReservation.exception.BadRequestException;
@@ -25,6 +27,8 @@ import com.ketha.FoE_RoomReservation.exception.ForbiddenException;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
+import com.ketha.FoE_RoomReservation.security.CustomUserDetailsService;
+import com.ketha.FoE_RoomReservation.security.JwtService;
 import com.ketha.FoE_RoomReservation.service.interfac.UserService;
 import com.ketha.FoE_RoomReservation.utils.Utils;
 
@@ -35,14 +39,18 @@ public class UserServiceImpl implements UserService{
 	private UserRepository userRepository;
 	private PasswordEncoder passwordEncoder;
 	private AuthenticationManager authenticationManager;
+	private JwtService jwtService;
+	private CustomUserDetailsService customUserDetailsService;
 	
 	// Setter for dependency injection
 	// UserService has its UserRepository dependency set at the time of creation
 	@Autowired
-	public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+	public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, CustomUserDetailsService customUserDetailsService) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.authenticationManager = authenticationManager;
+		this.jwtService = jwtService;
+		this.customUserDetailsService = customUserDetailsService;
 	}
 	
 	// Register user
@@ -62,10 +70,12 @@ public class UserServiceImpl implements UserService{
 			}
 			user.setPassword(passwordEncoder.encode(user.getPassword()));
 			User savedUser = userRepository.save(user);
+//			var jwtToken = jwtService.generateToken(user);
 			UserDto userDto = Utils.mapUserToUserDto(savedUser);
 			response.setStatusCode(200);
 			response.setMessage("User added successfully");
 			response.setUser(userDto);
+//			response.setToken(jwtToken);
 		} catch (CustomException e) {
 			response.setStatusCode(404);
             response.setMessage(e.getMessage());
@@ -86,10 +96,12 @@ public class UserServiceImpl implements UserService{
 		
 		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUserName(), loginDto.getPassword()));
-			User user = userRepository.findByUserName(loginDto.getUserName()).orElseThrow(() -> new BadCredentialsException(null));
+			var user = userRepository.findByUserName(loginDto.getUserName()).orElseThrow(() -> new BadCredentialsException(null));
+			var jwtToken = jwtService.generateToken(customUserDetailsService.loadUserByUsername(user.getUserName()));
 			response.setUserType(user.getUserType());
 			response.setStatusCode(200);
 			response.setMessage("User login successful");
+			response.setToken(jwtToken);
 			
 		} catch (BadCredentialsException e) {
 	        response.setStatusCode(400);
@@ -101,6 +113,16 @@ public class UserServiceImpl implements UserService{
 		return response;
 	}
 	
+//	@Override
+//	public LoginResponseDto login(LoginDto loginDto) {
+//		
+//		
+//		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUserName(), loginDto.getPassword()));
+//		User user = userRepository.findByUserName(loginDto.getUserName()).orElseThrow();
+//		var jwtToken = jwtService.generateToken((UserDetails) user);
+//		return LoginResponseDto.builder().token(jwtToken).build();
+//	}
+//	
 	// Get all users
 	@Override
 	public ResponseDto getAllUsers() {

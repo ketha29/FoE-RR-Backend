@@ -33,7 +33,7 @@ public class UserController {
 	}
 	
 	@GetMapping("/all")
-	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> getAllUsers() {
 		ResponseDto response =  service.getAllUsers();
 		return ResponseEntity.status(response.getStatusCode()).body(response);

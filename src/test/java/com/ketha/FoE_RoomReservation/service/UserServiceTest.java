@@ -91,7 +91,7 @@ public class UserServiceTest {
     @Test
     public void UserService_Register_ReturnUser() {
         // Arrange
-        when(userRepository.existsByUserName(user.getUserName())).thenReturn(false);
+        when(userRepository.existsByUserName(user.getUsername())).thenReturn(false);
         when(passwordEncoder.encode(user.getPassword())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(user);
 
@@ -108,7 +108,7 @@ public class UserServiceTest {
     @Test
     public void UserService_Register_UserAlreadyExists() {
         // Arrange
-        when(userRepository.existsByUserName(user.getUserName())).thenReturn(true);
+        when(userRepository.existsByUserName(user.getUsername())).thenReturn(true);
 
         // Act
         ResponseDto response = userService.register(user);
@@ -116,7 +116,7 @@ public class UserServiceTest {
         // Assert
         Assertions.assertThat(response).isNotNull();
         Assertions.assertThat(response.getStatusCode()).isEqualTo(404);
-        Assertions.assertThat(response.getMessage()).isEqualTo(user.getUserName() + " Already exists");
+        Assertions.assertThat(response.getMessage()).isEqualTo(user.getUsername() + " Already exists");
     }
 
     @Test
@@ -138,7 +138,7 @@ public class UserServiceTest {
     public void UserService_Login_ValidLogin() {
     	// Arrange
     	LoginDto loginDto = LoginDto.builder()
-    						.userName(user.getUserName())
+    						.userName(user.getUsername())
     						.password(user.getPassword())
     						.build();
 

@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 
 @Configuration
 @EnableWebSecurity
@@ -22,23 +24,28 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 	
 	private CustomUserDetailsService service;
+	private JwtAuthFilter jwtAuthFilter;
 	
 	@Autowired
-	public  SecurityConfig(CustomUserDetailsService service) {
+	public  SecurityConfig(CustomUserDetailsService service, JwtAuthFilter jwtAuthFilter) {
 		this.service = service;
+		this.jwtAuthFilter = jwtAuthFilter;
+		
 	}
 
 	// Customizing the default security configuration
 	@Bean
-	public SecurityFilterChain securityFilterChin(HttpSecurity http) throws Exception {
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http
 				.csrf(AbstractHttpConfigurer::disable)
 				.authorizeHttpRequests(request -> request
-					.requestMatchers("/user/**", "/room/**", "/booking/**", "/auth/**").permitAll()
-//					.requestMatchers("/user/**").hasAnyRole("admin", "superAdmin")
-					.anyRequest().authenticated())
+					.requestMatchers("/user/**", "/booking/**", "/auth/**").permitAll()
+//					.requestMatchers("/r/**").hasAnyRole("admin", "superAdmin")
+					.anyRequest()
+					.authenticated())
 				.authenticationProvider(authenticationProvider())
-				.formLogin(formLogin -> formLogin.permitAll())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+//				.formLogin(formLogin -> formLogin.permitAll())
 				.build();
 	}
 	

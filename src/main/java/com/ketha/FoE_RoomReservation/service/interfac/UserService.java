@@ -1,6 +1,7 @@
 package com.ketha.FoE_RoomReservation.service.interfac;
 
 import com.ketha.FoE_RoomReservation.dto.LoginDto;
+import com.ketha.FoE_RoomReservation.dto.LoginResponseDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.model.User;
 

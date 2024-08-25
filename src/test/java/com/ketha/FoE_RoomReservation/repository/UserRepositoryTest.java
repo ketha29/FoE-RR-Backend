@@ -88,10 +88,10 @@ public class UserRepositoryTest {
 		
 		userRepository.save(user);
 		
-		User returnUser = userRepository.findByUserName(user.getUserName()).get(); 
+		User returnUser = userRepository.findByUserName(user.getUsername()).get(); 
 				
 		Assertions.assertThat(returnUser).isNotNull();
-		Assertions.assertThat(returnUser.getUserName()).isEqualTo("e20199");
+		Assertions.assertThat(returnUser.getUsername()).isEqualTo("e20199");
 	}
 	
 	@Test
@@ -136,6 +136,6 @@ public class UserRepositoryTest {
 		User returnUser = userRepository.findByUserName("e20199").get(); 
 				
 		Assertions.assertThat(returnUser).isNotNull();
-		Assertions.assertThat(returnUser.getUserName()).isEqualTo("e20199");
+		Assertions.assertThat(returnUser.getUsername()).isEqualTo("e20199");
 	}
 }
