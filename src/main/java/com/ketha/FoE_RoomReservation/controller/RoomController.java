@@ -35,7 +35,7 @@ public class RoomController {
 		this.roomService = roomService;
 	}
 	
-//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+//	@PreAuthorize("hasAuthority('regularUser'), hasAuthority('admin') or hasAuthority('superAdmin')")
 	@GetMapping("/all")
 	public ResponseEntity<ResponseDto> getAllRooms() {
 		ResponseDto response =  roomService.getAllRooms();

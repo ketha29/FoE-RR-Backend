@@ -40,7 +40,7 @@ public class Booking {
 	@Enumerated(EnumType.STRING)
 	private RecurrenceType recurrence;
 	private int recurrencePeriod;
-	
+	private String details;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "eventId")
 	private Event event;

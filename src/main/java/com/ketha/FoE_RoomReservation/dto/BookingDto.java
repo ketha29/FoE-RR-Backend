@@ -22,6 +22,7 @@ public class BookingDto {
 	private Date date;
 	private RecurrenceType recurrence;
 	private int recurrencePeriod;
+	private String details;
 	private UserDto user;
 	private RoomDto room;
 }

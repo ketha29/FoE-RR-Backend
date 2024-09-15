@@ -82,12 +82,13 @@ public class BookingServiceImpl implements BookingService{
 	
 	@Override
 	// TODO verify that the login user id corresponds with the userId
-	public ResponseDto addBooking(long userId, long roomId, Booking bookingRequest) {
+	public ResponseDto addBooking(long userId, String roomName, Booking bookingRequest) {
 		ResponseDto response = new ResponseDto();
 		
 		try {
 			User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
-			Room room = roomRepository.findById(roomId).orElseThrow(() -> new CustomException("Room not found"));
+			Room room = roomRepository.findByRoomName(roomName).orElseThrow(() -> new CustomException("Room not found"));
+//			Room room = roomRepository.findById(roomId).orElseThrow(() -> new CustomException("Room not found"));
 			List<Booking> existingBookings = room.getBookings();
 			List<Date> availableDateList = availableDates(bookingRequest, existingBookings);
 			
@@ -106,6 +107,7 @@ public class BookingServiceImpl implements BookingService{
 						booking.setStartTime(bookingRequest.getStartTime());
 						booking.setEndTime(bookingRequest.getEndTime());
 						booking.setRecurrence(bookingRequest.getRecurrence());
+						booking.setDetails(bookingRequest.getDetails());
 						booking.setUser(user);
 						booking.setRoom(room);
 						booking.setDate(availableDate);

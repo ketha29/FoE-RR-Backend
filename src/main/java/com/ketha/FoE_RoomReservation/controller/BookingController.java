@@ -53,10 +53,11 @@ public class BookingController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PostMapping("/add-booking/{userId}/{roomId}")
+	@PostMapping("/add-booking/{roomId}/{userId}")
+//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> addBooking(
 			@PathVariable int userId,
-			@PathVariable int roomId,
+			@PathVariable String roomId,
 			@RequestBody Booking bookingRequest
 	){
 		ResponseDto response = bookingService.addBooking(userId, roomId, bookingRequest);

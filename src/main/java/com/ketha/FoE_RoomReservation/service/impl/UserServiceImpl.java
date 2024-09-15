@@ -102,10 +102,11 @@ public class UserServiceImpl implements UserService{
 			response.setStatusCode(200);
 			response.setMessage("User login successful");
 			response.setToken(jwtToken);
+			response.setUserId(user.getUserId());
 			
 		} catch (BadCredentialsException e) {
 	        response.setStatusCode(400);
-	        response.setMessage("Invalid credentials: " + e.getMessage());
+	        response.setMessage("Invalid login credentials: " + e.getMessage());
 	    } catch (Exception e) {
 			response.setStatusCode(500);
             response.setMessage("Error occurred during User login: " + e.getMessage());
