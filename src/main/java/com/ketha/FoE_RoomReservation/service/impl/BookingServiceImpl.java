@@ -107,6 +107,7 @@ public class BookingServiceImpl implements BookingService{
 						booking.setStartTime(bookingRequest.getStartTime());
 						booking.setEndTime(bookingRequest.getEndTime());
 						booking.setRecurrence(bookingRequest.getRecurrence());
+						booking.setRecurrencePeriod(bookingRequest.getRecurrencePeriod());
 						booking.setDetails(bookingRequest.getDetails());
 						booking.setUser(user);
 						booking.setRoom(room);
@@ -123,6 +124,55 @@ public class BookingServiceImpl implements BookingService{
 				response.setStatusCode(403);
 	            response.setMessage("Forbidden: not allowed to book with these specification");
 			}
+		} catch(CustomException e) {
+			response.setStatusCode(404);
+			response.setMessage(e.getMessage());
+		} catch (Exception e) {
+			response.setStatusCode(500);
+			response.setMessage("Error in adding the booking: " + e.getMessage());
+		}
+		return response;
+	}
+	
+	@Override
+	public ResponseDto updateBooking(long bookingId, long userId, Booking bookingRequest) {
+		ResponseDto response = new ResponseDto();
+		try {
+			// Get the selected booking details that is need to be updated
+			Booking selectedBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new CustomException("Booking not found"));
+			// Get all the bookings associated with the selected event id
+			List<Booking> selectedBookingList = bookingRepository.findAllByEventId(selectedBooking.getEvent().getEventId());
+			User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
+			Room room = roomRepository.findByRoomName(bookingRequest.getRoom().getRoomName()).orElseThrow(() -> new CustomException("Room not found"));
+			List<Booking> existingBookings = room.getBookings();
+			// Available dates according to the new booking info TODO show the selected booking dates as available
+			List<Date> availableDateList = availableDates(bookingRequest, existingBookings);
+			
+			if(allowToBook(bookingRequest, user, availableDateList)) {
+				// If all the dates are available allow to update the booking
+				if(availableDateList.size() == bookingRequest.getRecurrencePeriod()) {
+					for(Booking booking: selectedBookingList) {
+						booking.setStartTime(bookingRequest.getStartTime());
+						booking.setEndTime(bookingRequest.getEndTime());
+						booking.setRecurrence(bookingRequest.getRecurrence());
+						booking.setRecurrencePeriod(bookingRequest.getRecurrencePeriod());
+						booking.setDetails(bookingRequest.getDetails());
+						booking.setDate(bookingRequest.getDate());
+						booking.setUser(user);
+						booking.setRoom(room);
+						booking.setEvent(selectedBooking.getEvent());
+						response.setStatusCode(200);
+						response.setMessage("Successful");
+						bookingRepository.save(booking);
+					}
+				} else {
+					throw new CustomException("Rooms are not available for those selected dates");
+		        }
+			} else {
+				response.setStatusCode(403);
+	            response.setMessage("Forbidden: not allowed to book with these specification");
+			}
+			
 		} catch(CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage(e.getMessage());
@@ -222,7 +272,6 @@ public class BookingServiceImpl implements BookingService{
 
         if(user.getUserType() == UserType.regularUser) {
             // Check the booking dates for weekdays and booking time between 8 AM to 5 PM
-        	// TODO use external calendar api to get the academic days
             for(Date date : availableDateList) {
                 calendar.setTime(date);
                 int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);

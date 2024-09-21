@@ -20,6 +20,8 @@ public class Utils {
         userDto.setPhoneNo(user.getPhoneNo());
         userDto.setUserName(user.getUserName());
         userDto.setUserType(user.getUserType());
+        userDto.setFirstName(user.getFirstName());
+        userDto.setLastName(user.getLastName());
 		return userDto;
 	}
 	
