@@ -25,6 +25,8 @@ import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
+import com.ketha.FoE_RoomReservation.security.CustomUserDetailsService;
+import com.ketha.FoE_RoomReservation.security.JwtService;
 import com.ketha.FoE_RoomReservation.service.impl.UserServiceImpl;
 
 
@@ -45,66 +47,76 @@ public class UserServiceTest {
     
     @Mock
     private AuthenticationManager authenticationManager;
+    
+    @Mock
+    private CustomUserDetailsService customUserDetailsService;
+    
+    @Mock
+    private JwtService jwtService;
 
     @InjectMocks
     private UserServiceImpl userService;
 
-    private User user = User.builder()
-                .email("e20199@eng.pdn.ac.lk")
-                .phoneNo(0771233456)
-                .userName("e20199")
-                .password("password")
-                .userType(UserType.admin)
-                .build();
-  
-//    private User admin;
-//    private User superAdmin;
-//    private User regularUser1;
-//    private User regularUser2;
-    private User admin = User.builder()
-    					.userName("adminUser")
-    					.userType(UserType.admin)
-    					.build();
-    
-    private User superAdmin = User.builder()
-							.userName("superAdminUser")
-							.userType(UserType.superAdmin)
-							.build();
-    
-    private User regularUser1 = User.builder()
-							.userName("regularUser1")
-							.userType(UserType.regularUser)
-							.build();
-    
-    private User regularUser2 = User.builder()
-							.userName("regularUser2")
-							.userType(UserType.regularUser)
-							.build();
+    private User user;
+    private User admin;
+    private User superAdmin;
+    private User regularUser1;
+    private User regularUser2;
     
     @BeforeEach
     public void setUp() {
 		SecurityContextHolder.setContext(securityContext);
 		
+		user = User.builder()
+				.firstName("David")
+				.lastName("John")
+				.email("Davidjohn123@gmail.com")
+				.phoneNo(0771233456)
+				.userName("David")
+				.password("password")
+				.userType(UserType.admin)
+				.build();
 		
-//		User admin = User.builder()
-//					.userName("adminUser")
-//					.userType(UserType.admin)
-//					.build();
-//
-//		User superAdmin = User.builder()
-//						.userName("superAdminUser")
-//						.userType(UserType.superAdmin)
-//						.build();
-//
-//		User regularUser1 = User.builder()
-//							.userName("regularUser1")
-//							.userType(UserType.regularUser)
-//							.build();
-//
-//		User regularUser2 = User.builder()
-//							.userName("regularUser2")
-//							.userType(UserType.regularUser)
-//							.build();
+		admin = User.builder()
+				.firstName("David")
+				.lastName("John")
+				.email("Davidjohn123@gmail.com")
+				.phoneNo(0771233456)
+				.userName("David")
+				.password("password")
+				.userType(UserType.admin)
+				.build();
+
+		superAdmin = User.builder()
+				.firstName("super")
+				.lastName("Admin")
+				.email("SuperAdmin@gmail.com")
+				.phoneNo(0771564566)
+				.userName("superAdminUser")
+				.password("super123")
+				.userType(UserType.superAdmin)
+				.build();
+
+		regularUser1 = User.builder()
+				.firstName("Oliver")
+				.lastName("Wilson")
+				.email("oliver@gmail.com")
+				.phoneNo(0771233456)
+				.userName("e20199")
+				.password("password")
+				.userType(UserType.regularUser)
+				.build();
+			
+
+		regularUser2 = User.builder()
+				.firstName("David")
+				.lastName("Miller")
+				.email("Davidmiller123@gmail.com")
+				.phoneNo(0771233456)
+				.userName("Miller")
+				.password("password")
+				.userType(UserType.regularUser)
+				.build();
     }
 
     @Test
@@ -160,9 +172,9 @@ public class UserServiceTest {
     						.userName(user.getUserName())
     						.password(user.getPassword())
     						.build();
-
-    	when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
+    	
     	when(userRepository.findByUserName(loginDto.getUserName())).thenReturn(Optional.of(user));
+    	when(jwtService.generateToken(customUserDetailsService.loadUserByUsername(user.getUserName()))).thenReturn("jwtToken");
     	
     	// Act
     	ResponseDto response = userService.login(loginDto);
@@ -174,26 +186,23 @@ public class UserServiceTest {
         Assertions.assertThat(response.getUserType()).isEqualTo(UserType.admin);
     }
     
-//    @Test
-    // TODO unit test for invalid login
-//    public void UserService_Login_InValidLogin() {
-//    	// Arrange
-//    	LoginDto loginDto = LoginDto.builder()
-//    						.userName(user.getUserName())
-//    						.password("wrong password")
-//    						.build();
-//
-//    	when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
-//    	when(userRepository.findByUserName(loginDto.getUserName())).thenReturn(Optional.of(user));
-//    	
-//    	// Act
-//    	ResponseDto response = userService.login(loginDto);
-//    	
-//    	// Assert
-//    	Assertions.assertThat(response).isNotNull();
-//        Assertions.assertThat(response.getStatusCode()).isEqualTo(400);
-//        Assertions.assertThat(response.getMessage()).isEqualTo("Invalid credentials: Invalid credentials");
-//    }
+    @Test
+    public void UserService_Login_InValidLogin() {
+    	// Arrange
+    	LoginDto loginDto = LoginDto.builder()
+    						.userName(user.getUserName())
+    						.password("wrong_password")
+    						.build();
+    	
+    	when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
+    	
+    	// Act
+    	ResponseDto response = userService.login(loginDto);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(400);
+    }
     
     @Test
     public void UserService_GetAllUsers_ReturnAdminAndRegularUsers() {
@@ -202,8 +211,7 @@ public class UserServiceTest {
     	when(authentication.getName()).thenReturn("superAdminUser");
     	when(userRepository.findByUserName("superAdminUser")).thenReturn(Optional.of(superAdmin));
     	when(userRepository.findUserByUserType(UserType.admin)).thenReturn(Arrays.asList(admin));
-    	// TODO fix to return regular users
-//    	when(userRepository.findUserByUserType(UserType.regularUser)).thenReturn(Arrays.asList(regularUser1, regularUser2));
+    	when(userRepository.findUserByUserType(UserType.regularUser)).thenReturn(Arrays.asList(regularUser1, regularUser2));
        
         // Act
         ResponseDto response = userService.getAllUsers();
@@ -213,7 +221,7 @@ public class UserServiceTest {
         Assertions.assertThat(response.getStatusCode()).isEqualTo(200);
         Assertions.assertThat(response.getMessage()).isEqualTo("Successsful");
         Assertions.assertThat(response.getUserList()).isNotNull();
-        Assertions.assertThat(response.getUserList().size()).isEqualTo(1);
+        Assertions.assertThat(response.getUserList().size()).isEqualTo(3);
     }
     
     @Test
@@ -269,5 +277,222 @@ public class UserServiceTest {
         Assertions.assertThat(response.getStatusCode()).isEqualTo(404);
         Assertions.assertThat(response.getMessage()).isEqualTo("User not found: NotFound");
         Assertions.assertThat(response.getUserList()).isNull();
+    }
+    
+    @Test
+    public void UserService_GetUserByIdByRegularUser_ReturnException() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("regularUser1");
+    	when(userRepository.findByUserName("regularUser1")).thenReturn(Optional.of(regularUser1));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.of(regularUser2));
+    	
+    	// Act
+    	ResponseDto response = userService.getUserById(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(404);
+        Assertions.assertThat(response.getMessage()).isEqualTo("Permission not allowed: Forbidden" );
+        Assertions.assertThat(response.getUserList()).isNull();
+    }
+    
+    @Test
+    public void UserService_GetRegularUserByIdByAdmin_ReturnRegularUser() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("admin");
+    	when(userRepository.findByUserName("admin")).thenReturn(Optional.of(admin));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.of(regularUser1));
+    	
+    	// Act
+    	ResponseDto response = userService.getUserById(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(200);
+        Assertions.assertThat(response.getMessage()).isEqualTo("Successful");
+        Assertions.assertThat(response.getUser()).isNotNull();
+    }
+    
+    @Test
+    public void UserService_GetRegularUserByIdBySupAdmin_ReturnRegularUser() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("superAdmin");
+    	when(userRepository.findByUserName("superAdmin")).thenReturn(Optional.of(superAdmin));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.of(regularUser1));
+    	
+    	// Act
+    	ResponseDto response = userService.getUserById(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(200);
+        Assertions.assertThat(response.getMessage()).isEqualTo("Successful");
+        Assertions.assertThat(response.getUser()).isNotNull();
+    }
+    
+    @Test
+    public void UserService_GetAdminUserByIdBySupAdmin_ReturnAdminUser() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("superAdmin");
+    	when(userRepository.findByUserName("superAdmin")).thenReturn(Optional.of(superAdmin));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.of(admin));
+    	
+    	// Act
+    	ResponseDto response = userService.getUserById(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(200);
+        Assertions.assertThat(response.getMessage()).isEqualTo("Successful");
+        Assertions.assertThat(response.getUser()).isNotNull();
+    }
+    
+    @Test
+    public void UserService_GetAdminUserByIdByAdminUser_ReturnException() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("admin");
+    	when(userRepository.findByUserName("admin")).thenReturn(Optional.of(admin));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.of(user));
+    	
+    	// Act
+    	ResponseDto response = userService.getUserById(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(404);
+        Assertions.assertThat(response.getMessage()).isEqualTo("Permission not allowed: Forbidden" );
+        Assertions.assertThat(response.getUserList()).isNull();
+    }
+    
+    @Test
+    public void UserService_UserIdNotFound_ReturnException() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("admin");
+    	when(userRepository.findByUserName("admin")).thenReturn(Optional.of(admin));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.empty());
+    	
+    	// Act
+    	ResponseDto response = userService.getUserById(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(404);
+        Assertions.assertThat(response.getMessage()).isEqualTo("User not found: NotFound");
+        Assertions.assertThat(response.getUser()).isNull();
+    }
+    
+//    @Test
+//    public void UserService_DeleteUser_ReturnResponse() {
+//    	// Arrange
+//    	when(securityContext.getAuthentication()).thenReturn(authentication);
+//    	when(authentication.getName()).thenReturn("admin");
+//    	when(userRepository.findByUserName("admin")).thenReturn(Optional.of(admin));
+//    	when(userRepository.findById((long) 1)).thenReturn(Optional.empty());
+//    	
+//
+//    	// Act
+//    	ResponseDto response = userService.deleteUser(1);
+//    	
+//    	// Assert
+//    	Assertions.assertThat(response).isNotNull();
+//    	Assertions.assertThat(response.getStatusCode()).isEqualTo(200);
+//        Assertions.assertThat(response.getMessage()).isEqualTo("Successful");
+//        Assertions.assertThat(response.getUser()).isNull();
+//    }
+    
+    @Test
+    public void UserService_GetUserBookingsByAdmin_ReturnBookings() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("admin");
+    	when(userRepository.findByUserName("admin")).thenReturn(Optional.of(admin));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.of(regularUser1));
+    	
+    	// Act
+    	ResponseDto response = userService.getUserBookings(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(200);
+        Assertions.assertThat(response.getMessage()).isEqualTo("Successful");
+        Assertions.assertThat(response.getUser()).isNotNull();
+    }
+    
+    @Test
+    public void UserService_GetUserBookingsBySuperAdmin_ReturnBookings() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("superAdmin");
+    	when(userRepository.findByUserName("superAdmin")).thenReturn(Optional.of(superAdmin));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.of(regularUser1));
+    	
+    	// Act
+    	ResponseDto response = userService.getUserBookings(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(200);
+        Assertions.assertThat(response.getMessage()).isEqualTo("Successful");
+        Assertions.assertThat(response.getUser()).isNotNull();
+    }
+    
+    @Test
+    public void UserService_GetAdminBookingsBySuperAdmin_ReturnBookings() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("superAdmin");
+    	when(userRepository.findByUserName("superAdmin")).thenReturn(Optional.of(superAdmin));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.of(admin));
+    	
+    	// Act
+    	ResponseDto response = userService.getUserBookings(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(200);
+        Assertions.assertThat(response.getMessage()).isEqualTo("Successful");
+        Assertions.assertThat(response.getUser()).isNotNull();
+    }
+    
+    @Test
+    public void UserService_GetUserBookingsByRegularUser_ReturnException() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("user");
+    	when(userRepository.findByUserName("user")).thenReturn(Optional.of(regularUser1));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.of(regularUser2));
+    	
+    	// Act
+    	ResponseDto response = userService.getUserBookings(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(404);
+        Assertions.assertThat(response.getMessage()).isEqualTo("Permission not allowed: Forbidden");
+        Assertions.assertThat(response.getUser()).isNull();
+    }
+    
+    @Test
+    public void UserService_UserIdNotFoundInGetBooking_ReturnException() {
+    	// Arrange
+    	when(securityContext.getAuthentication()).thenReturn(authentication);
+    	when(authentication.getName()).thenReturn("admin");
+    	when(userRepository.findByUserName("admin")).thenReturn(Optional.of(admin));
+    	when(userRepository.findById((long) 1)).thenReturn(Optional.empty());
+    	
+    	// Act
+    	ResponseDto response = userService.getUserBookings(1);
+    	
+    	// Assert
+    	Assertions.assertThat(response).isNotNull();
+    	Assertions.assertThat(response.getStatusCode()).isEqualTo(404);
+        Assertions.assertThat(response.getMessage()).isEqualTo("User not found: NotFound");
+        Assertions.assertThat(response.getUser()).isNull();
     }
 }
