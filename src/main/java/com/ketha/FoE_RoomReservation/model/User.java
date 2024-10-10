@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -39,6 +38,7 @@ public class User {
 	@Column(nullable=false)
 	private String firstName;
 	private String lastName;
+	@Column(unique = true, nullable = false)
 	private String email;
 	private long phoneNo;
 	private String password;
@@ -55,3 +55,4 @@ public class User {
         return List.of(new SimpleGrantedAuthority(userType.toString()));
     }
 }
+

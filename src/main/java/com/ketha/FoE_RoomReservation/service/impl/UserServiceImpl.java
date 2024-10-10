@@ -2,23 +2,18 @@ package com.ketha.FoE_RoomReservation.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException.BadRequest;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.ketha.FoE_RoomReservation.dto.LoginDto;
-import com.ketha.FoE_RoomReservation.dto.LoginResponseDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.dto.UserDto;
 import com.ketha.FoE_RoomReservation.exception.BadRequestException;
@@ -55,7 +50,7 @@ public class UserServiceImpl implements UserService{
 	
 	// Register user
 	@Override
-	// TODO super admin can assign admins but admin can imly assign regular user
+	// TODO super admin can assign admins but admin can simply assign regular user
 	public ResponseDto register(User user) {
 		ResponseDto response = new ResponseDto();
 		try {
@@ -139,7 +134,8 @@ public class UserServiceImpl implements UserService{
 				userList = userRepository.findUserByUserType(UserType.regularUser);
 			} else if(loginUser.getUserType().equals(UserType.superAdmin)) {
 				userList = userRepository.findUserByUserType(UserType.admin);
-				userList.addAll(userRepository.findUserByUserType(UserType.regularUser));
+				List<User> regularUsers = userRepository.findUserByUserType(UserType.regularUser);
+				userList = Stream.concat(userList.stream(), regularUsers.stream()).collect(Collectors.toList());
 			} else {
 				throw new ForbiddenException("Forbidden");
 			}
