@@ -4,13 +4,18 @@ import java.sql.Date;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ketha.FoE_RoomReservation.dto.BookingDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
+import com.ketha.FoE_RoomReservation.email.api.dto.MailRequestDto;
+import com.ketha.FoE_RoomReservation.email.api.service.EmailService;
+import com.ketha.FoE_RoomReservation.email.api.service.EmailService.EmailType;
 import com.ketha.FoE_RoomReservation.exception.CustomException;
 import com.ketha.FoE_RoomReservation.model.Booking;
 import com.ketha.FoE_RoomReservation.model.Booking.RecurrenceType;
@@ -32,6 +37,9 @@ public class BookingServiceImpl implements BookingService{
 	private UserRepository userRepository;
 	private RoomRepository roomRepository;
 	private EventRepository eventRepository;
+	
+	@Autowired
+	private EmailService emailService;
 	
 	@Autowired
 	public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository, RoomRepository roomRepository, EventRepository eventRepository) {
@@ -115,6 +123,22 @@ public class BookingServiceImpl implements BookingService{
 						response.setMessage("Successful");
 						bookingRepository.save(booking);
 					}
+					
+					MailRequestDto request = MailRequestDto.builder()
+							.to(user.getEmail())
+							.userName(user.getUserName())
+							.subject("Booking placed : FOE Room Reservation")
+							.build();
+					
+					Map<String,Object> model = new HashMap<String, Object>();
+					model.put("userName", user.getUserName());
+					model.put("date", availableDateList.toString());
+					model.put("startTime", bookingRequest.getStartTime().toString());
+					model.put("endTime", bookingRequest.getEndTime().toString());
+					model.put("roomName", roomName);		
+					
+					emailService.sendMail(request, model,EmailType.placeBooking);
+					
 				} else {
 					throw new CustomException("Rooms are not available for those selected dates");
 		        }
@@ -147,6 +171,24 @@ public class BookingServiceImpl implements BookingService{
 			response.setStatusCode(200);
 			response.setMessage("Successful");
 			response.setBookingList(bookingDto);
+			
+			User user = booking.getUser();
+			
+			MailRequestDto request = MailRequestDto.builder()
+					.to(user.getEmail())
+					.userName(user.getUserName())
+					.subject("Booking cancelled : FOE Room Reservation")
+					.build();
+			
+			Map<String,Object> model = new HashMap<String, Object>();
+			model.put("userName", user.getUserName());
+			model.put("date", booking.getDate().toString());
+			model.put("startTime", booking.getStartTime().toString());
+			model.put("endTime", booking.getEndTime().toString());
+			model.put("roomName", booking.getRoom());		
+			
+			emailService.sendMail(request, model, EmailType.cancelBooking);
+			
 		} catch (CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage(e.getMessage());
