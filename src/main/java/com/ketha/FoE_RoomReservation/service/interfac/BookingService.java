@@ -23,4 +23,6 @@ public interface BookingService {
 	ResponseDto addBooking(long userId, String roomName, Booking bookingRequest);
 
 	ResponseDto updateBooking(long bookingId, long userId, Booking bookingRequest);
+
+	ResponseDto getWeekBooking(Date weekStart, Date weekEnd);
 }

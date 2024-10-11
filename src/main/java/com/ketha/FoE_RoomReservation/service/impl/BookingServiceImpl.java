@@ -98,6 +98,10 @@ public class BookingServiceImpl implements BookingService{
 					bookingRequest.setRecurrencePeriod(1);
 				}
 				
+                // Get the start and end dates from the available date list
+				Date startDate = availableDateList.get(0);
+				Date endDate = availableDateList.get(availableDateList.size() - 1);
+				
 				// If all the requested booking dates are available then make booking
 				if(availableDateList.size() == bookingRequest.getRecurrencePeriod()) {
 					Event event = new Event();
@@ -112,6 +116,8 @@ public class BookingServiceImpl implements BookingService{
 						booking.setUser(user);
 						booking.setRoom(room);
 						booking.setDate(availableDate);
+						booking.setStartDate(startDate);
+						booking.setEndDate(endDate);
 						booking.setEvent(event);
 						response.setStatusCode(200);
 						response.setMessage("Successful");
@@ -286,15 +292,13 @@ public class BookingServiceImpl implements BookingService{
                 }
             }
 
-            if(available && (bookingRequest.getRecurrence() == RecurrenceType.none) || 
-                ((bookingRequest.getRecurrence() == RecurrenceType.daily) && (bookingRequest.getRecurrencePeriod() <= 3)) ||
-                ((bookingRequest.getRecurrence() == RecurrenceType.weekly) && (bookingRequest.getRecurrencePeriod() <= 4))) {
+            if(available && (bookingRequest.getRecurrence() == RecurrenceType.none)) {
                 allow = true;
             }
 		} else if(user.getUserType() == UserType.admin) {
 			if((bookingRequest.getRecurrence() == RecurrenceType.none) || 
-				((bookingRequest.getRecurrence() == RecurrenceType.daily) && (bookingRequest.getRecurrencePeriod() <= 7)) ||
-				((bookingRequest.getRecurrence() == RecurrenceType.weekly) && (bookingRequest.getRecurrencePeriod() <= 16))) {
+				((bookingRequest.getRecurrence() == RecurrenceType.daily) && (bookingRequest.getRecurrencePeriod() <= 10)) ||
+				((bookingRequest.getRecurrence() == RecurrenceType.weekly) && (bookingRequest.getRecurrencePeriod() <= 5))) {
 					allow = true;
 			}
 		}
@@ -307,6 +311,27 @@ public class BookingServiceImpl implements BookingService{
 		
 		try {
 			List<Booking> bookingList = bookingRepository.findBookingByDate(date);
+			List<BookingDto> bookingDtoList = Utils.mapBookingListToBookingListDto(bookingList);
+			response.setStatusCode(200);
+			response.setMessage("Successful");
+			response.setBookingList(bookingDtoList);
+		} catch (CustomException e) {
+			response.setStatusCode(404);
+			response.setMessage(e.getMessage());
+		}
+		catch (Exception e) {
+			response.setStatusCode(500);
+			response.setMessage("Error in getting the bookings: " + e.getMessage());
+		}
+		return response;
+	}
+	
+	@Override
+	public ResponseDto getWeekBooking(Date weekStart, Date weekEnd) {
+		ResponseDto response = new ResponseDto();
+		
+		try {
+			List<Booking> bookingList = bookingRepository.getAllWeekBookings(weekStart, weekEnd);
 			List<BookingDto> bookingDtoList = Utils.mapBookingListToBookingListDto(bookingList);
 			response.setStatusCode(200);
 			response.setMessage("Successful");

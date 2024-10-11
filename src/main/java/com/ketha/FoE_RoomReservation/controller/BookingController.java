@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -39,10 +40,10 @@ public class BookingController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@GetMapping("/get-by-date")
+	@GetMapping("/day/{date}")
 //	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> getBookingByDate(
-			@RequestParam(value = "date", required = false) Date date
+			@PathVariable("date") Date date
 	) {
 		if(date == null) {
 			ResponseDto response = new ResponseDto();
@@ -50,7 +51,26 @@ public class BookingController {
 			response.setMessage("Date field cannot be empty");
 			return ResponseEntity.status(response.getStatusCode()).body(response);
 		}
-		ResponseDto response =  bookingService.getBookingByDate(date);
+	    java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+		ResponseDto response =  bookingService.getBookingByDate(sqlDate);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
+	}
+	
+	@GetMapping("/week/{weekStart}/{weekEnd}")
+//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	public ResponseEntity<ResponseDto> getBookingByDate(
+			@PathVariable("weekStart") Date weekStart,
+			@PathVariable("weekEnd") Date weekEnd
+	) {
+		if(weekStart == null || weekEnd == null) {
+			ResponseDto response = new ResponseDto();
+			response.setStatusCode(400);
+			response.setMessage("Date field cannot be empty");
+			return ResponseEntity.status(response.getStatusCode()).body(response);
+		}
+	    java.sql.Date sqlWeekStart = new java.sql.Date(weekStart.getTime());
+	    java.sql.Date sqlWeekEnd = new java.sql.Date(weekEnd.getTime());
+		ResponseDto response =  bookingService.getWeekBooking(sqlWeekStart, sqlWeekEnd);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
@@ -75,7 +95,7 @@ public class BookingController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@DeleteMapping("/delete/{bookingId}")
+	@DeleteMapping("/delete-booking/{bookingId}")
 	public ResponseEntity<ResponseDto> cancelBooking(@PathVariable long bookingId) {
 		ResponseDto response = bookingService.cancelBooking(bookingId);
 		return ResponseEntity.status(response.getStatusCode()).body(response);

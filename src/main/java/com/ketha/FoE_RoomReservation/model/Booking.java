@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -37,6 +38,8 @@ public class Booking {
 	private Time startTime;
 	private Time endTime;
 	private Date date;
+	private Date startDate;
+	private Date endDate;
 	@Enumerated(EnumType.STRING)
 	private RecurrenceType recurrence;
 	private int recurrencePeriod;
