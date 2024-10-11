@@ -20,6 +20,8 @@ public class BookingDto {
 	private Time startTime;
 	private Time endTime;
 	private Date date;
+	private Date startDate;
+	private Date endDate;
 	private RecurrenceType recurrence;
 	private int recurrencePeriod;
 	private String details;

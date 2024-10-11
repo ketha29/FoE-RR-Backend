@@ -63,7 +63,7 @@ public class RoomController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PostMapping("/add")
+	@PostMapping("/add-room")
 	public ResponseEntity<ResponseDto> addRoom(
 			@RequestParam(value = "capacity", required = false) Integer capacity,
 			@RequestParam(value = "roomName", required = false) String roomName,
@@ -79,14 +79,14 @@ public class RoomController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@DeleteMapping("/remove/{roomId}")
+	@DeleteMapping("/delete-room/{roomId}")
 //	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> deleteRoom(@PathVariable int roomId) {
 		ResponseDto response =  roomService.deleteRoom(roomId);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PutMapping("/update/{roomId}")
+	@PutMapping("/update-room/{roomId}")
 	public ResponseEntity<ResponseDto> updateRoom(
 			@PathVariable int roomId,
 			@RequestParam(value = "capacity", required = false) Integer capacity,
