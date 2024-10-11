@@ -20,6 +20,8 @@ public class Utils {
         userDto.setPhoneNo(user.getPhoneNo());
         userDto.setUserName(user.getUserName());
         userDto.setUserType(user.getUserType());
+        userDto.setFirstName(user.getFirstName());
+        userDto.setLastName(user.getLastName());
 		return userDto;
 	}
 	
@@ -40,6 +42,8 @@ public class Utils {
 		bookingDto.setStartTime(booking.getStartTime());
 		bookingDto.setEndTime(booking.getEndTime());
 		bookingDto.setDate(booking.getDate());
+		bookingDto.setStartDate(booking.getStartDate());
+		bookingDto.setEndDate(booking.getEndDate());
 		bookingDto.setRecurrence(booking.getRecurrence());
 		bookingDto.setRecurrencePeriod(booking.getRecurrencePeriod());
 		bookingDto.setDetails(booking.getDetails());
@@ -66,6 +70,8 @@ public class Utils {
 		bookingDto.setStartTime(booking.getStartTime());
 		bookingDto.setEndTime(booking.getEndTime());
 		bookingDto.setDate(booking.getDate());
+		bookingDto.setStartDate(booking.getStartDate());
+		bookingDto.setEndDate(booking.getEndDate());
 		bookingDto.setRecurrence(booking.getRecurrence());
 		bookingDto.setRecurrencePeriod(booking.getRecurrencePeriod());
 		bookingDto.setDetails(booking.getDetails());
