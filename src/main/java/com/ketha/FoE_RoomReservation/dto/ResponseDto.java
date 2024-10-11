@@ -17,8 +17,10 @@ public class ResponseDto {
 
 	private int StatusCode;
 	private String message;
+	private String token;
 	
 	private UserType userType;
+	private long userId;
 	
 	private UserDto user;
 	private RoomDto room;

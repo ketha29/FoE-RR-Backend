@@ -17,9 +17,11 @@ import lombok.NoArgsConstructor;
 public class UserDto {
 
 	private long userId;
+	private String userName;
+	private String firstName;
+	private String lastName;
 	private String email;
 	private long phoneNo;
-	private String userName;
 	private UserType userType;
 	@Builder.Default
 	private List<BookingDto> bookings = new ArrayList<>();

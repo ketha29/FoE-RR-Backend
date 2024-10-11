@@ -12,8 +12,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -21,6 +22,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
+@Table(name = "bookings")
 public class Booking {
 	
 	@Id
@@ -32,7 +35,7 @@ public class Booking {
 	@Enumerated(EnumType.STRING)
 	private RecurrenceType recurrence;
 	private int recurrencePeriod;
-	
+	private String details;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "eventId")
 	private Event event;

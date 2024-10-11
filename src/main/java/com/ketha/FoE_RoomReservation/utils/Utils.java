@@ -42,6 +42,7 @@ public class Utils {
 		bookingDto.setDate(booking.getDate());
 		bookingDto.setRecurrence(booking.getRecurrence());
 		bookingDto.setRecurrencePeriod(booking.getRecurrencePeriod());
+		bookingDto.setDetails(booking.getDetails());
 		return bookingDto;
 	}
 	
@@ -67,6 +68,7 @@ public class Utils {
 		bookingDto.setDate(booking.getDate());
 		bookingDto.setRecurrence(booking.getRecurrence());
 		bookingDto.setRecurrencePeriod(booking.getRecurrencePeriod());
+		bookingDto.setDetails(booking.getDetails());
 		if(mapUser) {
 			bookingDto.setUser(Utils.mapUserToUserDto(booking.getUser()));
 		}
@@ -106,6 +108,6 @@ public class Utils {
 	}
 	
 	public static List<BookingDto> mapBookingListToBookingListDto(List<Booking> bookingList) {
-		return bookingList.stream().map(booking -> mapBookingToBookingDto(booking)).collect(Collectors.toList());
+		return bookingList.stream().map(booking -> mapBookingToBookingDtoPlusBookedRooms(booking, true)).collect(Collectors.toList());
 	}
 }

@@ -14,9 +14,11 @@ public interface BookingService {
 	
 	ResponseDto getBookingByDate(Date date);
 	
-	ResponseDto addBooking(long userId, long roomId, Booking bookingRequest);
+//	ResponseDto addBooking(long userId, long roomId, Booking bookingRequest);
 	
 //	List<Date> addBooking(int userId, int roomId, Booking bookingRequest);
 
 	ResponseDto cancelBooking(long bookingId);
+
+	ResponseDto addBooking(long userId, String roomName, Booking bookingRequest);
 }

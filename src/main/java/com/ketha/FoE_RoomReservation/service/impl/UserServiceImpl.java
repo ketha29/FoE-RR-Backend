@@ -2,10 +2,9 @@ package com.ketha.FoE_RoomReservation.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,8 +12,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException.BadRequest;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.ketha.FoE_RoomReservation.dto.LoginDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
@@ -25,6 +22,8 @@ import com.ketha.FoE_RoomReservation.exception.ForbiddenException;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
+import com.ketha.FoE_RoomReservation.security.CustomUserDetailsService;
+import com.ketha.FoE_RoomReservation.security.JwtService;
 import com.ketha.FoE_RoomReservation.service.interfac.UserService;
 import com.ketha.FoE_RoomReservation.utils.Utils;
 
@@ -35,19 +34,23 @@ public class UserServiceImpl implements UserService{
 	private UserRepository userRepository;
 	private PasswordEncoder passwordEncoder;
 	private AuthenticationManager authenticationManager;
+	private JwtService jwtService;
+	private CustomUserDetailsService customUserDetailsService;
 	
 	// Setter for dependency injection
 	// UserService has its UserRepository dependency set at the time of creation
 	@Autowired
-	public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+	public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService, CustomUserDetailsService customUserDetailsService) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.authenticationManager = authenticationManager;
+		this.jwtService = jwtService;
+		this.customUserDetailsService = customUserDetailsService;
 	}
 	
 	// Register user
 	@Override
-	// TODO super admin can assign admins but admin can imly assign regular user
+	// TODO super admin can assign admins but admin can simply assign regular user
 	public ResponseDto register(User user) {
 		ResponseDto response = new ResponseDto();
 		try {
@@ -62,10 +65,12 @@ public class UserServiceImpl implements UserService{
 			}
 			user.setPassword(passwordEncoder.encode(user.getPassword()));
 			User savedUser = userRepository.save(user);
+//			var jwtToken = jwtService.generateToken(user);
 			UserDto userDto = Utils.mapUserToUserDto(savedUser);
 			response.setStatusCode(200);
 			response.setMessage("User added successfully");
 			response.setUser(userDto);
+//			response.setToken(jwtToken);
 		} catch (CustomException e) {
 			response.setStatusCode(404);
             response.setMessage(e.getMessage());
@@ -86,14 +91,17 @@ public class UserServiceImpl implements UserService{
 		
 		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUserName(), loginDto.getPassword()));
-			User user = userRepository.findByUserName(loginDto.getUserName()).orElseThrow(() -> new BadCredentialsException(null));
+			var user = userRepository.findByUserName(loginDto.getUserName()).orElseThrow(() -> new BadCredentialsException(null));
+			var jwtToken = jwtService.generateToken(customUserDetailsService.loadUserByUsername(user.getUserName()));
 			response.setUserType(user.getUserType());
 			response.setStatusCode(200);
 			response.setMessage("User login successful");
+			response.setToken(jwtToken);
+			response.setUserId(user.getUserId());
 			
 		} catch (BadCredentialsException e) {
 	        response.setStatusCode(400);
-	        response.setMessage("Invalid credentials: " + e.getMessage());
+	        response.setMessage("Invalid login credentials: " + e.getMessage());
 	    } catch (Exception e) {
 			response.setStatusCode(500);
             response.setMessage("Error occurred during User login: " + e.getMessage());
@@ -101,6 +109,16 @@ public class UserServiceImpl implements UserService{
 		return response;
 	}
 	
+//	@Override
+//	public LoginResponseDto login(LoginDto loginDto) {
+//		
+//		
+//		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUserName(), loginDto.getPassword()));
+//		User user = userRepository.findByUserName(loginDto.getUserName()).orElseThrow();
+//		var jwtToken = jwtService.generateToken((UserDetails) user);
+//		return LoginResponseDto.builder().token(jwtToken).build();
+//	}
+//	
 	// Get all users
 	@Override
 	public ResponseDto getAllUsers() {
@@ -116,7 +134,8 @@ public class UserServiceImpl implements UserService{
 				userList = userRepository.findUserByUserType(UserType.regularUser);
 			} else if(loginUser.getUserType().equals(UserType.superAdmin)) {
 				userList = userRepository.findUserByUserType(UserType.admin);
-				userList.addAll(userRepository.findUserByUserType(UserType.regularUser));
+				List<User> regularUsers = userRepository.findUserByUserType(UserType.regularUser);
+				userList = Stream.concat(userList.stream(), regularUsers.stream()).collect(Collectors.toList());
 			} else {
 				throw new ForbiddenException("Forbidden");
 			}

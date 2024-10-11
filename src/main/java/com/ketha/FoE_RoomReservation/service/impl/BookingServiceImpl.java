@@ -1,15 +1,21 @@
 package com.ketha.FoE_RoomReservation.service.impl;
 
 import java.sql.Date;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ketha.FoE_RoomReservation.dto.BookingDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
+import com.ketha.FoE_RoomReservation.email.api.dto.MailRequestDto;
+import com.ketha.FoE_RoomReservation.email.api.service.EmailService;
+import com.ketha.FoE_RoomReservation.email.api.service.EmailService.EmailType;
 import com.ketha.FoE_RoomReservation.exception.CustomException;
 import com.ketha.FoE_RoomReservation.model.Booking;
 import com.ketha.FoE_RoomReservation.model.Booking.RecurrenceType;
@@ -31,6 +37,9 @@ public class BookingServiceImpl implements BookingService{
 	private UserRepository userRepository;
 	private RoomRepository roomRepository;
 	private EventRepository eventRepository;
+	
+	@Autowired
+	private EmailService emailService;
 	
 	@Autowired
 	public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository, RoomRepository roomRepository, EventRepository eventRepository) {
@@ -79,12 +88,14 @@ public class BookingServiceImpl implements BookingService{
 	}
 	
 	@Override
-	public ResponseDto addBooking(long userId, long roomId, Booking bookingRequest) {
+	// TODO verify that the login user id corresponds with the userId
+	public ResponseDto addBooking(long userId, String roomName, Booking bookingRequest) {
 		ResponseDto response = new ResponseDto();
 		
 		try {
 			User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
-			Room room = roomRepository.findById(roomId).orElseThrow(() -> new CustomException("Room not found"));
+			Room room = roomRepository.findByRoomName(roomName).orElseThrow(() -> new CustomException("Room not found"));
+//			Room room = roomRepository.findById(roomId).orElseThrow(() -> new CustomException("Room not found"));
 			List<Booking> existingBookings = room.getBookings();
 			List<Date> availableDateList = availableDates(bookingRequest, existingBookings);
 			
@@ -103,6 +114,7 @@ public class BookingServiceImpl implements BookingService{
 						booking.setStartTime(bookingRequest.getStartTime());
 						booking.setEndTime(bookingRequest.getEndTime());
 						booking.setRecurrence(bookingRequest.getRecurrence());
+						booking.setDetails(bookingRequest.getDetails());
 						booking.setUser(user);
 						booking.setRoom(room);
 						booking.setDate(availableDate);
@@ -111,12 +123,28 @@ public class BookingServiceImpl implements BookingService{
 						response.setMessage("Successful");
 						bookingRepository.save(booking);
 					}
+					
+					MailRequestDto request = MailRequestDto.builder()
+							.to(user.getEmail())
+							.userName(user.getUserName())
+							.subject("Booking placed : FOE Room Reservation")
+							.build();
+					
+					Map<String,Object> model = new HashMap<String, Object>();
+					model.put("userName", user.getUserName());
+					model.put("date", availableDateList.toString());
+					model.put("startTime", bookingRequest.getStartTime().toString());
+					model.put("endTime", bookingRequest.getEndTime().toString());
+					model.put("roomName", roomName);		
+					
+					emailService.sendMail(request, model,EmailType.placeBooking);
+					
 				} else {
 					throw new CustomException("Rooms are not available for those selected dates");
 		        }
 			} else {
 				response.setStatusCode(403);
-	            response.setMessage("Forbidden: not allwed to book with these specification");
+	            response.setMessage("Forbidden: not allowed to book with these specification");
 			}
 		} catch(CustomException e) {
 			response.setStatusCode(404);
@@ -143,6 +171,24 @@ public class BookingServiceImpl implements BookingService{
 			response.setStatusCode(200);
 			response.setMessage("Successful");
 			response.setBookingList(bookingDto);
+			
+			User user = booking.getUser();
+			
+			MailRequestDto request = MailRequestDto.builder()
+					.to(user.getEmail())
+					.userName(user.getUserName())
+					.subject("Booking cancelled : FOE Room Reservation")
+					.build();
+			
+			Map<String,Object> model = new HashMap<String, Object>();
+			model.put("userName", user.getUserName());
+			model.put("date", booking.getDate().toString());
+			model.put("startTime", booking.getStartTime().toString());
+			model.put("endTime", booking.getEndTime().toString());
+			model.put("roomName", booking.getRoom());		
+			
+			emailService.sendMail(request, model, EmailType.cancelBooking);
+			
 		} catch (CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage(e.getMessage());
@@ -190,7 +236,6 @@ public class BookingServiceImpl implements BookingService{
 				}
 				break;
 		}
-//		System.out.println(availableDateList);
 		return availableDateList;
 	}
 	
@@ -210,25 +255,34 @@ public class BookingServiceImpl implements BookingService{
 				);
 	}
 	
+	// Check if the user is allowed to book with his requirements 
 	private boolean allowToBook(Booking bookingRequest, User user, List<Date> availableDateList) {
 		boolean allow = false;
-		boolean available = true;
-		Calendar calendar = Calendar.getInstance();
+        boolean available = true;
+        Calendar calendar = Calendar.getInstance();
 
-		if(user.getUserType() == UserType.regularUser) {
-			// TODO check the booking dates for week ends and booking time
-//			for(Date date : availableDateList) {
-//				calendar.setTime(date);
-//				if((calendar.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY) || (calendar.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY)) {
-//					available = false;
-//					break;
-//				}
-//			}
-			if(available && (bookingRequest.getRecurrence() == RecurrenceType.none) || 
-				((bookingRequest.getRecurrence() == RecurrenceType.daily) && (bookingRequest.getRecurrencePeriod() <= 3)) ||
-				((bookingRequest.getRecurrence() == RecurrenceType.weekly) && (bookingRequest.getRecurrencePeriod() <= 4))) {
-					allow = true;
-			}
+        if(user.getUserType() == UserType.regularUser) {
+            // Check the booking dates for weekdays and booking time between 8 AM to 5 PM
+        	// TODO use external calendar api to get the academic days
+            for(Date date : availableDateList) {
+                calendar.setTime(date);
+                int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+                if(dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
+                    available = false;
+                    break;
+                }  
+                if(bookingRequest.getStartTime().toLocalTime().isBefore(LocalTime.parse("08:00:00")) || 
+                		bookingRequest.getEndTime().toLocalTime().isAfter(LocalTime.parse("17:00:00"))) {
+                    available = false;
+                    break;
+                }
+            }
+
+            if(available && (bookingRequest.getRecurrence() == RecurrenceType.none) || 
+                ((bookingRequest.getRecurrence() == RecurrenceType.daily) && (bookingRequest.getRecurrencePeriod() <= 3)) ||
+                ((bookingRequest.getRecurrence() == RecurrenceType.weekly) && (bookingRequest.getRecurrencePeriod() <= 4))) {
+                allow = true;
+            }
 		} else if(user.getUserType() == UserType.admin) {
 			if((bookingRequest.getRecurrence() == RecurrenceType.none) || 
 				((bookingRequest.getRecurrence() == RecurrenceType.daily) && (bookingRequest.getRecurrencePeriod() <= 7)) ||

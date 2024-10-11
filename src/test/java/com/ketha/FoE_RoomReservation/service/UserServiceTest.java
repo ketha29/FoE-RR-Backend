@@ -47,7 +47,6 @@ public class UserServiceTest {
     
     @Mock
     private AuthenticationManager authenticationManager;
-    
     @Mock
     private CustomUserDetailsService customUserDetailsService;
     
@@ -62,7 +61,6 @@ public class UserServiceTest {
     private User superAdmin;
     private User regularUser1;
     private User regularUser2;
-    
     @BeforeEach
     public void setUp() {
 		SecurityContextHolder.setContext(securityContext);

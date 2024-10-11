@@ -32,6 +32,11 @@ public class RoomServiceImpl implements RoomService{
 		
 		try {
 			List<Room> roomList = roomRepository.findAll();
+			if (roomList.isEmpty()) {
+		        System.out.println("No rooms found in the database.");
+		    } else {
+		        System.out.println("Rooms found: " + roomList.size());
+		    }
 			List<RoomDto> roomDtoList = Utils.mapRoomListToRoomListDto(roomList);
 			response.setStatusCode(200);
 			response.setMessage("Successful");
