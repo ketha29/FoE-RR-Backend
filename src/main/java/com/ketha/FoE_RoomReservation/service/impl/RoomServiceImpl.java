@@ -32,18 +32,18 @@ public class RoomServiceImpl implements RoomService{
 		
 		try {
 			List<Room> roomList = roomRepository.findAll();
-			if (roomList.isEmpty()) {
-		        System.out.println("No rooms found in the database.");
-		    } else {
-		        System.out.println("Rooms found: " + roomList.size());
-		    }
+//			if (roomList.isEmpty()) {
+//		        System.out.println("No rooms found in the database.");
+//		    } else {
+//		        System.out.println("Rooms found: " + roomList.size());
+//		    }
 			List<RoomDto> roomDtoList = Utils.mapRoomListToRoomListDto(roomList);
 			response.setStatusCode(200);
 			response.setMessage("Successful");
 			response.setRoomList(roomDtoList);
 		} catch (Exception e) {
 			response.setStatusCode(500);
-			response.setMessage("Error in adding the new room: " + e.getMessage());
+			response.setMessage("Error getting rooms: " + e.getMessage());
 		}
 		return response;
 	}
@@ -90,6 +90,17 @@ public class RoomServiceImpl implements RoomService{
 		ResponseDto response = new ResponseDto();
 
 		try {
+	        // Check if a room with the same roomName already exists
+			if(roomRepository.existsByRoomName(roomName)) {
+				response.setStatusCode(400);
+				response.setMessage("Room with name '" + roomName + "' already exists");
+				return response;
+			}
+			if(capacity <= 0) {
+				response.setStatusCode(400);
+				response.setMessage("Room capacity should be positive");
+				return response;
+			}
 			Room room = new Room();
 			room.setCapacity(capacity);
 			room.setRoomName(roomName);
@@ -133,6 +144,11 @@ public class RoomServiceImpl implements RoomService{
 
 		try {
 			Room room = roomRepository.findById(roomId).orElseThrow(() -> new CustomException("Room not found"));
+			if(capacity <= 0) {
+				response.setStatusCode(400);
+				response.setMessage("Room capacity should be positive");
+				return response;
+			}
 			if(capacity != null) room.setCapacity(capacity);
 			if(roomName != null) room.setRoomName(roomName);
 			if(description != null) room.setDescription(description);
