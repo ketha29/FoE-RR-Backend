@@ -7,7 +7,6 @@ import lombok.Data;
 @Builder
 public class MailRequestDto {
 	
-	private String userName;
 	private String to;
 	private String subject;
 	

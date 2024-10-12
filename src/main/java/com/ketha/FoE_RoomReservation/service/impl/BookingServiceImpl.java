@@ -133,18 +133,18 @@ public class BookingServiceImpl implements BookingService{
 					
 					MailRequestDto request = MailRequestDto.builder()
 							.to(user.getEmail())
-							.userName(user.getUserName())
 							.subject("Booking placed : FOE Room Reservation")
 							.build();
 					
 					Map<String,Object> model = new HashMap<String, Object>();
 					model.put("userName", user.getUserName());
-					model.put("date", availableDateList.toString());
-					model.put("startTime", bookingRequest.getStartTime().toString());
-					model.put("endTime", bookingRequest.getEndTime().toString());
-					model.put("roomName", roomName);		
+					model.put("purpose", bookingRequest.getDetails());
+					model.put("dates", emailService.formatDateList(availableDateList));
+					model.put("startTime", emailService.formatTime(bookingRequest.getStartTime()));
+					model.put("endTime", emailService.formatTime(bookingRequest.getEndTime()));
+					model.put("roomName", roomName);	
 					
-					emailService.sendMail(request, model,EmailType.placeBooking);
+//					emailService.sendMail(request, model,EmailType.placeBooking);
 					
 				} else {
 					throw new CustomException("Rooms are not available for those selected dates");
@@ -218,9 +218,25 @@ public class BookingServiceImpl implements BookingService{
 		
 		try {
 			Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new CustomException("Booking not found"));
+			User user = booking.getUser();
 			long eventId = booking.getEvent().getEventId();
 			List<Booking> recurringBookings  = bookingRepository.findAllByEventId(eventId);
 			List<Long> bookingIds = recurringBookings.stream().map(recurringBooking -> recurringBooking.getBookingId()).toList();
+			List<Date> bookingDates = recurringBookings.stream().map(recurringBooking->recurringBooking.getDate()).toList();
+			// Build mail request
+			MailRequestDto request = MailRequestDto.builder()
+					.to(user.getEmail())
+					.subject("Booking cancelled : FOE Room Reservation")
+					.build();
+	
+			Map<String,Object> model = new HashMap<String, Object>();
+			model.put("userName", user.getUserName());
+			model.put("dates", emailService.formatDateList(bookingDates));
+			model.put("startTime", emailService.formatTime(booking.getStartTime()));
+			model.put("endTime", emailService.formatTime(booking.getEndTime()));
+			model.put("roomName", booking.getRoom().getRoomName());
+						
+			// Delete booking Implementation
 			bookingRepository.deleteAllById(bookingIds);
 			eventRepository.deleteById(eventId);
 			List<BookingDto> bookingDto = Utils.mapBookingListToBookingListDto(recurringBookings);
@@ -228,22 +244,22 @@ public class BookingServiceImpl implements BookingService{
 			response.setMessage("Successful");
 			response.setBookingList(bookingDto);
 			
-			User user = booking.getUser();
+			// Send mail
+			emailService.sendMail(request, model, EmailType.userCancelBooking);
 			
-			MailRequestDto request = MailRequestDto.builder()
-					.to(user.getEmail())
-					.userName(user.getUserName())
-					.subject("Booking cancelled : FOE Room Reservation")
-					.build();
-			
-			Map<String,Object> model = new HashMap<String, Object>();
-			model.put("userName", user.getUserName());
-			model.put("date", booking.getDate().toString());
-			model.put("startTime", booking.getStartTime().toString());
-			model.put("endTime", booking.getEndTime().toString());
-			model.put("roomName", booking.getRoom());		
-			
-			emailService.sendMail(request, model, EmailType.cancelBooking);
+			if(user.getUserType() == UserType.regularUser) {
+				// notify admin when user cancels
+				request.setTo(null);
+				request.setSubject("User cancelled booking : FOE Room Reservation");
+				
+				emailService.sendMail(request, model, EmailType.notifyAdmin);
+			}else {
+				// notify user when admin or superadmin cancels
+				request.setTo(null);
+				request.setSubject("Admin cancelled booking : FOE Room Reservation");
+				
+				emailService.sendMail(request, model, EmailType.notifyUser);
+			}
 			
 		} catch (CustomException e) {
 			response.setStatusCode(404);

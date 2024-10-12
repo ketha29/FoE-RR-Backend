@@ -2,13 +2,16 @@
     <body>
         <h2>FOE Room Reservation</h2>
 
-        Dear ${userName},<br>
-        <p>We have received your request, and we want to confirm that your bookings
-        with the following specification has been successfully cancelled</p>
+        Dear Admin,<br>
+        <p>This is to inform you that a booking has been successfully cancelled by the user</p>
 
         <h3>Cancelled Booking : details</h3>
         <div><b>
             <table>
+                <tr>
+                    <td style="padding: 3px">Username</td>
+                    <td style="border-left: 2px solid red; padding: 5px;"> ${userName}</td>
+                </tr>
                 <tr>
                     <td style="padding: 3px">Booked room</td>
                     <td style="border-left: 2px solid red; padding: 5px;"> ${roomName}</td>
