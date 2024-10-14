@@ -12,10 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ketha.FoE_RoomReservation.dto.BookingDto;
+import com.ketha.FoE_RoomReservation.dto.MailRequestDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
-import com.ketha.FoE_RoomReservation.email.api.dto.MailRequestDto;
-import com.ketha.FoE_RoomReservation.email.api.service.EmailService;
-import com.ketha.FoE_RoomReservation.email.api.service.EmailService.EmailType;
 import com.ketha.FoE_RoomReservation.exception.CustomException;
 import com.ketha.FoE_RoomReservation.model.Booking;
 import com.ketha.FoE_RoomReservation.model.Booking.RecurrenceType;
@@ -27,8 +25,11 @@ import com.ketha.FoE_RoomReservation.repository.BookingRepository;
 import com.ketha.FoE_RoomReservation.repository.EventRepository;
 import com.ketha.FoE_RoomReservation.repository.RoomRepository;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
+import com.ketha.FoE_RoomReservation.service.impl.EmailServiceImpl.EmailType;
 import com.ketha.FoE_RoomReservation.service.interfac.BookingService;
 import com.ketha.FoE_RoomReservation.utils.Utils;
+
+import jakarta.mail.MessagingException;
 
 @Service
 public class BookingServiceImpl implements BookingService{
@@ -39,7 +40,7 @@ public class BookingServiceImpl implements BookingService{
 	private EventRepository eventRepository;
 	
 	@Autowired
-	private EmailService emailService;
+	private EmailServiceImpl emailService;
 	
 	@Autowired
 	public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository, RoomRepository roomRepository, EventRepository eventRepository) {
@@ -99,6 +100,18 @@ public class BookingServiceImpl implements BookingService{
 			List<Booking> existingBookings = room.getBookings();
 			List<Date> availableDateList = availableDates(bookingRequest, existingBookings);
 			
+			// Preparing Mail
+			MailRequestDto request = MailRequestDto.builder()
+					.to(user.getEmail())
+					.subject("Booking placed : FOE Room Reservation")
+					.userName(user.getUserName())
+					.purpose(bookingRequest.getDetails())
+					.dates(emailService.formatDateList(availableDateList))
+					.startTime(emailService.formatTime(bookingRequest.getStartTime()))
+					.endTime(emailService.formatTime(bookingRequest.getEndTime()))
+					.roomName(roomName)
+					.build();
+			
 			if(allowToBook(bookingRequest, user, availableDateList)) {
 				// If the recurrence type is none then set the default value 0 for recurrence period
 				if((bookingRequest.getRecurrence() == RecurrenceType.none)) {
@@ -111,6 +124,8 @@ public class BookingServiceImpl implements BookingService{
 				
 				// If all the requested booking dates are available then make booking
 				if(availableDateList.size() == bookingRequest.getRecurrencePeriod()) {
+										
+					// Booking Implementation
 					Event event = new Event();
 					eventRepository.save(event);
 					for(Date availableDate : availableDateList) {
@@ -120,6 +135,7 @@ public class BookingServiceImpl implements BookingService{
 						booking.setRecurrence(bookingRequest.getRecurrence());
 						booking.setRecurrencePeriod(bookingRequest.getRecurrencePeriod());
 						booking.setDetails(bookingRequest.getDetails());
+						booking.setBookedForUser(bookingRequest.getBookedForUser());
 						booking.setUser(user);
 						booking.setRoom(room);
 						booking.setDate(availableDate);
@@ -129,22 +145,9 @@ public class BookingServiceImpl implements BookingService{
 						response.setStatusCode(200);
 						response.setMessage("Successful");
 						bookingRepository.save(booking);
-					}
+					}	
 					
-					MailRequestDto request = MailRequestDto.builder()
-							.to(user.getEmail())
-							.subject("Booking placed : FOE Room Reservation")
-							.build();
-					
-					Map<String,Object> model = new HashMap<String, Object>();
-					model.put("userName", user.getUserName());
-					model.put("purpose", bookingRequest.getDetails());
-					model.put("dates", emailService.formatDateList(availableDateList));
-					model.put("startTime", emailService.formatTime(bookingRequest.getStartTime()));
-					model.put("endTime", emailService.formatTime(bookingRequest.getEndTime()));
-					model.put("roomName", roomName);	
-					
-//					emailService.sendMail(request, model,EmailType.placeBooking);
+					emailService.postEmail(request, EmailType.placeBooking);
 					
 				} else {
 					throw new CustomException("Rooms are not available for those selected dates");
@@ -156,6 +159,9 @@ public class BookingServiceImpl implements BookingService{
 		} catch(CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage(e.getMessage());
+		} catch (MessagingException e) {
+			response.setStatusCode(500);
+			response.setMessage("E-mail sending failure: " + e.getMessage());
 		} catch (Exception e) {
 			response.setStatusCode(500);
 			response.setMessage("Error in adding the booking: " + e.getMessage());
@@ -245,20 +251,20 @@ public class BookingServiceImpl implements BookingService{
 			response.setBookingList(bookingDto);
 			
 			// Send mail
-			emailService.sendMail(request, model, EmailType.userCancelBooking);
+			//emailService.sendMail(request, model, EmailType.userCancelBooking);
 			
 			if(user.getUserType() == UserType.regularUser) {
 				// notify admin when user cancels
 				request.setTo(null);
 				request.setSubject("User cancelled booking : FOE Room Reservation");
 				
-				emailService.sendMail(request, model, EmailType.notifyAdmin);
+				//emailService.sendMail(request, model, EmailType.notifyAdmin);
 			}else {
 				// notify user when admin or superadmin cancels
 				request.setTo(null);
 				request.setSubject("Admin cancelled booking : FOE Room Reservation");
 				
-				emailService.sendMail(request, model, EmailType.notifyUser);
+				//emailService.sendMail(request, model, EmailType.notifyUser);
 			}
 			
 		} catch (CustomException e) {
