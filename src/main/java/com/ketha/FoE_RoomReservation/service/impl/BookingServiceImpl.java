@@ -131,20 +131,20 @@ public class BookingServiceImpl implements BookingService{
 						bookingRepository.save(booking);
 					}
 					
-					MailRequestDto request = MailRequestDto.builder()
-							.to(user.getEmail())
-							.userName(user.getUserName())
-							.subject("Booking placed : FOE Room Reservation")
-							.build();
-					
-					Map<String,Object> model = new HashMap<String, Object>();
-					model.put("userName", user.getUserName());
-					model.put("date", availableDateList.toString());
-					model.put("startTime", bookingRequest.getStartTime().toString());
-					model.put("endTime", bookingRequest.getEndTime().toString());
-					model.put("roomName", roomName);		
-					
-					emailService.sendMail(request, model,EmailType.placeBooking);
+//					MailRequestDto request = MailRequestDto.builder()
+//							.to(user.getEmail())
+//							.userName(user.getUserName())
+//							.subject("Booking placed : FOE Room Reservation")
+//							.build();
+//					
+//					Map<String,Object> model = new HashMap<String, Object>();
+//					model.put("userName", user.getUserName());
+//					model.put("date", availableDateList.toString());
+//					model.put("startTime", bookingRequest.getStartTime().toString());
+//					model.put("endTime", bookingRequest.getEndTime().toString());
+//					model.put("roomName", roomName);		
+//					
+//					emailService.sendMail(request, model,EmailType.placeBooking);
 					
 				} else {
 					throw new CustomException("Rooms are not available for those selected dates");
@@ -228,22 +228,22 @@ public class BookingServiceImpl implements BookingService{
 			response.setMessage("Successful");
 			response.setBookingList(bookingDto);
 			
-			User user = booking.getUser();
-			
-			MailRequestDto request = MailRequestDto.builder()
-					.to(user.getEmail())
-					.userName(user.getUserName())
-					.subject("Booking cancelled : FOE Room Reservation")
-					.build();
-			
-			Map<String,Object> model = new HashMap<String, Object>();
-			model.put("userName", user.getUserName());
-			model.put("date", booking.getDate().toString());
-			model.put("startTime", booking.getStartTime().toString());
-			model.put("endTime", booking.getEndTime().toString());
-			model.put("roomName", booking.getRoom());		
-			
-			emailService.sendMail(request, model, EmailType.cancelBooking);
+//			User user = booking.getUser();
+//			
+//			MailRequestDto request = MailRequestDto.builder()
+//					.to(user.getEmail())
+//					.userName(user.getUserName())
+//					.subject("Booking cancelled : FOE Room Reservation")
+//					.build();
+//			
+//			Map<String,Object> model = new HashMap<String, Object>();
+//			model.put("userName", user.getUserName());
+//			model.put("date", booking.getDate().toString());
+//			model.put("startTime", booking.getStartTime().toString());
+//			model.put("endTime", booking.getEndTime().toString());
+//			model.put("roomName", booking.getRoom());		
+//			
+//			emailService.sendMail(request, model, EmailType.cancelBooking);
 			
 		} catch (CustomException e) {
 			response.setStatusCode(404);
@@ -303,12 +303,18 @@ public class BookingServiceImpl implements BookingService{
 	 * the end time of the booking is before the end time of the all existing bookings
 	 */
 	private boolean roomIsAvailable(Date currentDate, Booking bookingRequest, List<Booking> existingBookings) {
-		return existingBookings.stream()
-				.noneMatch(existingBooking -> 
-					existingBooking.getDate().toLocalDate().isEqual(currentDate.toLocalDate()) &&(
-						!(bookingRequest.getEndTime().toLocalTime().isBefore(existingBooking.getStartTime().toLocalTime()) || 
-								bookingRequest.getStartTime().toLocalTime().isAfter(existingBooking.getEndTime().toLocalTime())))
-				);
+	    return existingBookings.stream()
+	        // Filter for bookings on the same day
+	        .filter(existingBooking -> existingBooking.getDate().toLocalDate().isEqual(currentDate.toLocalDate()))
+	        // Check if the requested time does not overlap with any existing booking
+	        .noneMatch(existingBooking -> 
+	            // The booking should either end exactly when an existing booking starts or start exactly when an existing booking ends
+	            !(bookingRequest.getEndTime().toLocalTime().equals(existingBooking.getStartTime().toLocalTime()) || 
+	              bookingRequest.getStartTime().toLocalTime().equals(existingBooking.getEndTime().toLocalTime())) && // Allow adjacent times
+	            // Check if there is any overlap
+	            (bookingRequest.getEndTime().toLocalTime().isAfter(existingBooking.getStartTime().toLocalTime()) && 
+	             bookingRequest.getStartTime().toLocalTime().isBefore(existingBooking.getEndTime().toLocalTime()))
+	        );
 	}
 	
 	// Check if the user is allowed to book with his requirements 

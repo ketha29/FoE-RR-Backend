@@ -3,6 +3,7 @@ package com.ketha.FoE_RoomReservation.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,7 @@ import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.service.impl.UserServiceImpl;
 
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -49,7 +51,7 @@ public class UserController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PostMapping("/register")
+	@PostMapping("/add-user")
 //	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> register(@RequestBody User user) {
 		ResponseDto response =  service.register(user);
@@ -61,7 +63,7 @@ public class UserController {
 //		service.updateUser(userDetails);
 //	}
 	
-	@DeleteMapping("delete/{userId}")
+	@DeleteMapping("delete-user/{userId}")
 //	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> deleteUser(@PathVariable long userId) {
 		ResponseDto response =  service.deleteUser(userId);
