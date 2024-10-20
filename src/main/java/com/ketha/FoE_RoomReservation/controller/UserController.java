@@ -3,6 +3,7 @@ package com.ketha.FoE_RoomReservation.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,7 @@ import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.service.impl.UserServiceImpl;
 
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -46,6 +48,13 @@ public class UserController {
 	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> getUserBookings(@PathVariable long userId) {
 		ResponseDto response =  service.getUserBookings(userId);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
+	}
+	
+	@GetMapping("/get-by-name/{fullName}")
+//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	public ResponseEntity<ResponseDto> getUserByFullName(@PathVariable String fullName) {
+		ResponseDto response =  service.getUserbyFullName(fullName);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
