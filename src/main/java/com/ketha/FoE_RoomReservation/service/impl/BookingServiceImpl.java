@@ -233,15 +233,14 @@ public class BookingServiceImpl implements BookingService{
 			MailRequestDto request = MailRequestDto.builder()
 					.to(user.getEmail())
 					.subject("Booking cancelled : FOE Room Reservation")
+					.userName(user.getUserName())
+					.dates(emailService.formatDateList(bookingDates))
+					.startTime(emailService.formatTime(booking.getStartTime()))
+					.endTime(emailService.formatTime(booking.getEndTime()))
+					.roomName(booking.getRoom().getRoomName().toString())
 					.build();
-	
-			Map<String,Object> model = new HashMap<String, Object>();
-			model.put("userName", user.getUserName());
-			model.put("dates", emailService.formatDateList(bookingDates));
-			model.put("startTime", emailService.formatTime(booking.getStartTime()));
-			model.put("endTime", emailService.formatTime(booking.getEndTime()));
-			model.put("roomName", booking.getRoom().getRoomName());
-						
+			
+			System.err.println(request);
 			// Delete booking Implementation
 			bookingRepository.deleteAllById(bookingIds);
 			eventRepository.deleteById(eventId);
@@ -251,20 +250,17 @@ public class BookingServiceImpl implements BookingService{
 			response.setBookingList(bookingDto);
 			
 			// Send mail
-			//emailService.sendMail(request, model, EmailType.userCancelBooking);
+			emailService.postEmail(request, EmailType.userCancelBooking);
 			
 			if(user.getUserType() == UserType.regularUser) {
 				// notify admin when user cancels
-				request.setTo(null);
 				request.setSubject("User cancelled booking : FOE Room Reservation");
-				
-				//emailService.sendMail(request, model, EmailType.notifyAdmin);
+				emailService.postEmail(request, EmailType.notifyAdmin);
 			}else {
 				// notify user when admin or superadmin cancels
-				request.setTo(null);
+				request.setTo(booking.getBookedForUser().getEmail());
 				request.setSubject("Admin cancelled booking : FOE Room Reservation");
-				
-				//emailService.sendMail(request, model, EmailType.notifyUser);
+				emailService.postEmail(request, EmailType.notifyUser);
 			}
 			
 		} catch (CustomException e) {

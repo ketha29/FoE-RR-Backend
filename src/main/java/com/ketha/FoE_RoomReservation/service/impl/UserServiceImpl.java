@@ -193,6 +193,44 @@ public class UserServiceImpl implements UserService{
 		return response;
 	}
 	
+	public ResponseDto getUserbyFullName(String fullName) {
+		ResponseDto response = new ResponseDto();
+		
+		String[] names = fullName.trim().split("\\s+");
+		String regexPattern = names[0];
+		regexPattern = names.length > 1 ? names[1] : String.join("|", names); // Handling null LastName
+		try {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			String loginUserName = auth.getName();
+			User loginUser = userRepository.findByUserName(loginUserName)
+					.orElseThrow(() -> new CustomException("login user not found"));
+			
+			List<User> userList = null;
+			if (loginUser.getUserType().equals(UserType.admin) || loginUser.getUserType().equals(UserType.admin)) {
+				userList = userRepository.findByName(regexPattern);
+				List<UserDto> userDto = userList.stream().map((user) -> Utils.mapUserToUserDto(user))
+						.collect(Collectors.toList());
+				response.setStatusCode(200);
+				response.setMessage("Successful");
+				response.setUserList(userDto);
+			} else {
+				throw new ForbiddenException("Forbidden");
+			}
+
+		} catch (CustomException e) {
+			response.setStatusCode(404);
+			response.setMessage("User not found: " + e.getMessage());
+		} catch (ForbiddenException e) {
+			response.setStatusCode(404);
+			response.setMessage("Permission not allowed: " + e.getMessage());
+		} catch (Exception e) {
+			response.setStatusCode(500);
+			response.setMessage("Error getting the user: " + e.getMessage());
+		}
+		return response;
+	}
+
+	
 	@Override
 	public ResponseDto getUserBookings(long userId) {
 		ResponseDto response = new ResponseDto();
