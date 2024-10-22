@@ -3,7 +3,6 @@ package com.ketha.FoE_RoomReservation.model;
 import java.sql.Date;
 import java.sql.Time;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -48,6 +47,8 @@ public class Booking {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "UserId")
 	private User user;
-	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name= "bookedFor")
+	private User bookedForUser;
 	public enum RecurrenceType {none, daily, weekly};
 }
