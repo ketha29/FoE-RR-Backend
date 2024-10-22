@@ -25,4 +25,6 @@ public interface BookingService {
 	ResponseDto updateBooking(long bookingId, long userId, Booking bookingRequest);
 
 	ResponseDto getWeekBooking(Date weekStart, Date weekEnd);
+
+//	ResponseDto isRoomAvailable(Date date, String roomName);
 }

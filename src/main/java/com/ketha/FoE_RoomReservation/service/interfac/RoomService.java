@@ -15,12 +15,13 @@ public interface RoomService {
 	
 	ResponseDto getRoomById(long roomId);
 	
-	ResponseDto getAvailableRoomsByDate(Time startTime, Time endTime, Date date);
+//	ResponseDto getAvailableRoomsByDate(Time startTime, Time endTime, Date date);
 	
 	ResponseDto addRoom(int capacity, String roomName, String description);
 	
 	ResponseDto deleteRoom(long roomId);
 	
 	ResponseDto updateRoom(long roomId, Integer capacity, String roomName, String description);
-	
+
+	ResponseDto getAvailableRoomsByDate(Date date);
 }

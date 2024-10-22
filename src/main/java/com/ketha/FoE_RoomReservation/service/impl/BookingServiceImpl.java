@@ -4,9 +4,11 @@ import java.sql.Date;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -393,4 +395,54 @@ public class BookingServiceImpl implements BookingService{
 		}
 		return response;
 	}
+	
+//	@Override
+//	public ResponseDto id(Date date, String roomName) {
+//	    ResponseDto response = new ResponseDto();
+//	    try {
+//	        // Fetch the list of bookings for the given date
+//	        List<Booking> bookingList = bookingRepository.findBookingByDate(date);
+//	        // Filter the booking list based on the room name
+//	        List<Booking> roomBookings = bookingList.stream()
+//	            .filter(booking -> booking.getRoom().getRoomName().equalsIgnoreCase(roomName))
+//	            .collect(Collectors.toList());
+//	        // Sort the bookings by start time
+//	        roomBookings.sort(Comparator.comparing(Booking::getStartTime));
+//	        
+//	        LocalTime openingTime = LocalTime.of(8, 0);
+//	        LocalTime closingTime = LocalTime.of(18, 0);
+//	        // Initialize the start of free time as the opening time
+//	        LocalTime lastEndTime = openingTime;
+//	        boolean isFreeTimeAvailable = false;
+//	        
+//	        // Check gaps between bookings
+//	        for (Booking booking : roomBookings) {
+//	            LocalTime bookingStartTime = booking.getStartTime().toLocalTime();
+//	            LocalTime bookingEndTime = booking.getEndTime().toLocalTime();
+//	            if (lastEndTime.isBefore(bookingStartTime)) {
+//	                isFreeTimeAvailable = true;
+//	                break;
+//	            }
+//	            // Update the last end time to the current booking's end time
+//	            lastEndTime = bookingEndTime;
+//	        }
+//	        
+//	        // Check if there's free time after the last booking before closing time
+//	        if (lastEndTime.isBefore(closingTime)) {
+//	            isFreeTimeAvailable = true;
+//	        }
+//	        if (isFreeTimeAvailable) {
+//	            response.setStatusCode(200);
+//	            response.setMessage("Free time is available for booking.");
+//	        } else {
+//	            response.setStatusCode(404);
+//	            response.setMessage("No free time available for booking on this date.");
+//	        }
+//	    } catch (Exception e) {
+//	        response.setStatusCode(500);
+//	        response.setMessage("Error in checking free time: " + e.getMessage());
+//	    }
+//	    return response;
+//	}
+
 }

@@ -4,6 +4,8 @@ import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -11,8 +13,10 @@ import org.springframework.stereotype.Service;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.dto.RoomDto;
 import com.ketha.FoE_RoomReservation.exception.CustomException;
+import com.ketha.FoE_RoomReservation.model.Booking;
 import com.ketha.FoE_RoomReservation.model.Booking.RecurrenceType;
 import com.ketha.FoE_RoomReservation.model.Room;
+import com.ketha.FoE_RoomReservation.repository.BookingRepository;
 import com.ketha.FoE_RoomReservation.repository.RoomRepository;
 import com.ketha.FoE_RoomReservation.service.interfac.RoomService;
 import com.ketha.FoE_RoomReservation.utils.Utils;
@@ -21,9 +25,11 @@ import com.ketha.FoE_RoomReservation.utils.Utils;
 public class RoomServiceImpl implements RoomService{
 	
 	private RoomRepository roomRepository;
+	private BookingRepository bookingRepository;
 
-	public RoomServiceImpl(RoomRepository roomRepository) {
+	public RoomServiceImpl(RoomRepository roomRepository, BookingRepository bookingRepository) {
 		this.roomRepository = roomRepository; 
+		this.bookingRepository = bookingRepository; 
 	}
 	
 	@Override
@@ -69,21 +75,58 @@ public class RoomServiceImpl implements RoomService{
 	}
 
 	@Override
-	public ResponseDto getAvailableRoomsByDate(Time startTime, Time endTime, Date date) {
-		ResponseDto response = new ResponseDto();
-		// TODO not working properly
-		try {
-			List<Room> roomList = roomRepository.findAvailableRoomsByDate(startTime, endTime, date);
-			List<RoomDto> roomDtoList = Utils.mapRoomListToRoomListDto(roomList);
-			response.setStatusCode(200);
-			response.setMessage("Successful");
-			response.setRoomList(roomDtoList);
-		} catch (Exception e) {
-			response.setStatusCode(500);
-			response.setMessage("Error in getting the room: " + e.getMessage());
-		}
-		return response;
+	public ResponseDto getAvailableRoomsByDate(Date date) {
+	    ResponseDto response = new ResponseDto();
+	    try {
+	        // Define booking opening and closing times for the day
+	        LocalTime bookingOpenTime = LocalTime.of(8, 0);
+	        LocalTime bookingEndTime = LocalTime.of(18, 0);
+	        
+	        // Get all rooms
+	        List<Room> allRooms = roomRepository.findAll();
+
+	        // Iterate through each room and check availability within the booking window
+	        List<Room> availableRooms = new ArrayList<>();
+	        for (Room room : allRooms) {
+				// Get all bookings for this room on the given date
+	            List<Booking> roomBookings = bookingRepository.findByDateAndRoom_RoomName(date, room.getRoomName());
+	            
+	            // Sort bookings by start time
+	            roomBookings.sort(Comparator.comparing(Booking::getStartTime));
+
+	            // Initialize time tracker for availability
+	            LocalTime lastEndTime = bookingOpenTime;
+	            boolean isRoomAvailable = false;
+	            
+	            // Check gaps between bookings
+	            for (Booking booking : roomBookings) {
+	                LocalTime bookingStartTime = booking.getStartTime().toLocalTime();	           
+	                // Check if there's free time before the current booking starts
+	                if (lastEndTime.isBefore(bookingStartTime)) {
+	                    isRoomAvailable = true;
+	                    break;
+	                }	                
+	                lastEndTime = booking.getEndTime().toLocalTime();
+	            }
+	            if (lastEndTime.isBefore(bookingEndTime)) {
+	                isRoomAvailable = true;
+	            }
+	            if (isRoomAvailable) {
+	                availableRooms.add(room);
+	            }
+	        }
+	        List<RoomDto> availableRoomDtoList = Utils.mapRoomListToRoomListDto(availableRooms);
+	        response.setStatusCode(200);
+	        response.setMessage("Successful");
+	        response.setRoomList(availableRoomDtoList);
+
+	    } catch (Exception e) {
+	        response.setStatusCode(500);
+	        response.setMessage("Error in getting available rooms: " + e.getMessage());
+	    }
+	    return response;
 	}
+
 
 	@Override
 	public ResponseDto addRoom(int capacity, String roomName, String description) {
