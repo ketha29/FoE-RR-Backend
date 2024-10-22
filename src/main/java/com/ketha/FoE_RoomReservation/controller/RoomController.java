@@ -45,23 +45,15 @@ public class RoomController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@GetMapping("/available-rooms-by-date")
-	public ResponseEntity<ResponseDto> getAvailableRoomsByDate(
-			@RequestParam(value = "startTime", required = false) String startTimeStr,
-			@RequestParam(value = "endTime", required = false) String endTimeStr,
-			@RequestParam(value = "date", required = false) Date date
-	) {
-		if(startTimeStr == null || endTimeStr == null || date == null) {
-			ResponseDto response = new ResponseDto();
-			response.setStatusCode(400);
-			response.setMessage("These fields(startTime, endTime, date) shouldn't be empty");
-			return ResponseEntity.status(response.getStatusCode()).body(response);
-		}
-		Time startTime = Time.valueOf(LocalTime.parse(startTimeStr, DateTimeFormatter.ofPattern("HH:mm:ss")));
-        Time endTime = Time.valueOf(LocalTime.parse(endTimeStr, DateTimeFormatter.ofPattern("HH:mm:ss")));
-		ResponseDto response = roomService.getAvailableRoomsByDate(startTime, endTime, date);
-		return ResponseEntity.status(response.getStatusCode()).body(response);
+	@GetMapping("/available-rooms-by-date/{date}")
+	public ResponseEntity<ResponseDto> getAvailableRoomsByDate(@PathVariable Date date) {
+	    java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+	    System.out.println("Received date: " + sqlDate);
+	    
+	    ResponseDto response = roomService.getAvailableRoomsByDate(sqlDate);
+	    return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
+
 	
 	@PostMapping("/add-room")
 	public ResponseEntity<ResponseDto> addRoom(

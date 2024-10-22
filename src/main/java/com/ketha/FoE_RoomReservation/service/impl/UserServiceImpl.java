@@ -54,15 +54,15 @@ public class UserServiceImpl implements UserService{
 	public ResponseDto register(User user) {
 		ResponseDto response = new ResponseDto();
 		try {
-			if(user.getUserType() == null) {
-				user.setUserType(UserType.regularUser);
-			}
 			if(userRepository.existsByUserName(user.getUserName())) {
-				throw new CustomException(user.getUserName() + " Already exists");
+				throw new CustomException("User name " + user.getUserName() + " is already taken");
 			}
-			if(user.getUserName() == null || user.getUserName().isBlank() || user.getPassword() == null || user.getPassword().isBlank()) {
-	            throw new BadRequestException("User name or password shouldn't be empty");
+			if(userRepository.existsByEmail(user.getEmail())) {
+				throw new CustomException("Already having an account for " + user.getEmail());
 			}
+//			if(user.getUserName() == null || user.getUserName().isBlank() || user.getPassword() == null || user.getPassword().isBlank()) {
+//	            throw new BadRequestException("User name or password shouldn't be empty");
+//			}
 			user.setPassword(passwordEncoder.encode(user.getPassword()));
 			User savedUser = userRepository.save(user);
 //			var jwtToken = jwtService.generateToken(user);
@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService{
 			response.setUser(userDto);
 //			response.setToken(jwtToken);
 		} catch (CustomException e) {
-			response.setStatusCode(404);
+			response.setStatusCode(400);
             response.setMessage(e.getMessage());
 		} catch (BadRequestException e) {
 	        response.setStatusCode(400);
@@ -125,22 +125,8 @@ public class UserServiceImpl implements UserService{
 		ResponseDto response = new ResponseDto();
 		
 		try {
-			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			String loginUserName = auth.getName();
-			User loginUser = userRepository.findByUserName(loginUserName).orElseThrow(() -> new CustomException("NotFound"));
-			
-			List<User> userList = null;
-			if(loginUser.getUserType().equals(UserType.admin)) {
-				userList = userRepository.findUserByUserType(UserType.regularUser);
-			} else if(loginUser.getUserType().equals(UserType.superAdmin)) {
-				userList = userRepository.findUserByUserType(UserType.admin);
-				List<User> regularUsers = userRepository.findUserByUserType(UserType.regularUser);
-				userList = Stream.concat(userList.stream(), regularUsers.stream()).collect(Collectors.toList());
-			} else {
-				throw new ForbiddenException("Forbidden");
-			}
-			
-			List<UserDto> userDto = userList.stream().map((user) -> Utils.mapUserToUserDto(user)).collect(Collectors.toList());
+			List<User> userList = userRepository.findAll();
+			List<UserDto> userDto = Utils.mapUserListToUserListDto(userList);
 			response.setUserList(userDto);
 			response.setStatusCode(200);
 			response.setMessage("Successsful");
