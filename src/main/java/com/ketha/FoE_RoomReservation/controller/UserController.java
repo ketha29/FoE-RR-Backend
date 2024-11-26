@@ -70,7 +70,7 @@ public class UserController {
 //		service.updateUser(userDetails);
 //	}
 	
-	@DeleteMapping("delete/{userId}")
+	@DeleteMapping("delete-user/{userId}")
 //	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> deleteUser(@PathVariable long userId) {
 		ResponseDto response =  service.deleteUser(userId);

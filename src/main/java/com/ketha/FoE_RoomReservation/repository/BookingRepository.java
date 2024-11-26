@@ -22,4 +22,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 	
 	@Query("SELECT b FROM Booking b WHERE b.date >= :startDate AND b.date <= :endDate")
 	List<Booking> getAllWeekBookings(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
-}
+	
+	@Query("SELECT b FROM Booking b WHERE b.date = :date AND b.room.roomName = :roomName")
+    List<Booking> findByDateAndRoom_RoomName(@Param("date") Date date, @Param("roomName") String roomName);}

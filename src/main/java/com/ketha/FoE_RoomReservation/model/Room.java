@@ -6,6 +6,7 @@ import java.util.List;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,7 +29,9 @@ public class Room {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long roomId;
+	@Column(nullable = false)
 	private int capacity;
+	@Column(unique = true, nullable = false)
 	private String roomName;
 	private String description;
 	

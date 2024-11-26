@@ -95,5 +95,15 @@ public class BookingController {
 	public ResponseEntity<ResponseDto> cancelBooking(@PathVariable long bookingId) {
 		ResponseDto response = bookingService.cancelBooking(bookingId);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
-	}	
+	}
+	
+//	@GetMapping("/is-room-available/{date}/{roomName}")
+//	public ResponseEntity<ResponseDto> isRoomAvailable(
+//			@PathVariable("date") Date date,
+//			@PathVariable("roomName") String roomName
+//	) {
+//		java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+//		ResponseDto response =  bookingService.isRoomAvailable(sqlDate, roomName);
+//		return ResponseEntity.status(response.getStatusCode()).body(response);
+//	}
 }

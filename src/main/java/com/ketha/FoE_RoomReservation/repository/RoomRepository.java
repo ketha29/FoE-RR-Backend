@@ -15,6 +15,8 @@ import com.ketha.FoE_RoomReservation.model.Room;
 public interface RoomRepository extends JpaRepository<Room, Long> {
 	
 	Optional<Room> findByRoomName(String room);
+	
+	boolean existsByRoomName(String roomName);
 
     @Query("SELECT r FROM Room r WHERE r.roomId NOT IN (SELECT b.room.roomId FROM Booking b WHERE (b.startTime < :startTime) AND (b.endTime > :endTime) AND (b.date = :date))")
 	List<Room> findAvailableRoomsByDate(Time startTime,  Time endTime, Date date);

@@ -65,6 +65,9 @@ public class UserServiceImpl implements UserService {
 					|| user.getPassword().isBlank()) {
 				throw new BadRequestException("User name or password shouldn't be empty");
 			}
+//			if(user.getUserName() == null || user.getUserName().isBlank() || user.getPassword() == null || user.getPassword().isBlank()) {
+//	            throw new BadRequestException("User name or password shouldn't be empty");
+//			}
 			user.setPassword(passwordEncoder.encode(user.getPassword()));
 			User savedUser = userRepository.save(user);
 //			var jwtToken = jwtService.generateToken(user);

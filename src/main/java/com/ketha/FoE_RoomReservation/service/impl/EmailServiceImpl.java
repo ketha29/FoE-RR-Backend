@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -37,7 +38,8 @@ public class EmailServiceImpl {
 
 	@Autowired
 	private UserRepository userRepository;
-
+	
+	@Async
 	public void postEmail(MailRequestDto request, EmailType emailType) throws MessagingException {
 
 		Context context = new Context();
