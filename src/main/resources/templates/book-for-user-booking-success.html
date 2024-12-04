@@ -5,8 +5,7 @@
 	<p>
 		Dear <span th:text="${userName}"></span>,
 	</p>
-	<p>Thank you for using the FOE Online Room Reservation service.</p>
-	<p>Your booking has been placed successfully.</p>
+	<p>This is to inform you that a booking has been successfully placed by the admin, on your request.</p>
 
 	<h3>Booking Details</h3>
 	<div>
@@ -25,7 +24,8 @@
 				<td>Booked Days</td>
 				<td style="border-left: 2px solid blue;">
 					<ul style="list-style-type: none; padding: 0; margin: 0;">
-						<li th:each="date : ${notification.bookingDates}" th:text="${date}"></li>
+						<li th:each="date : ${notification.bookingDates}"
+							th:text="${date}"></li>
 					</ul>
 				</td>
 			</tr>
@@ -41,5 +41,7 @@
 			</tr>
 		</table>
 	</div>
+	<br><p>If booking had been placed without your consent, please contact admin.</p>
+	<br>Thank you for using the FOE Online Room Reservation service.
 </body>
 </html>

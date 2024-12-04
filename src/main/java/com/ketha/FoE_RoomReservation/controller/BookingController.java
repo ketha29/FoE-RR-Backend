@@ -91,9 +91,12 @@ public class BookingController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@DeleteMapping("/delete-booking/{bookingId}")
-	public ResponseEntity<ResponseDto> cancelBooking(@PathVariable long bookingId) {
-		ResponseDto response = bookingService.cancelBooking(bookingId);
+	@DeleteMapping("/delete-booking/{bookingId}/{userId}")
+	public ResponseEntity<ResponseDto> cancelBooking(
+			@PathVariable long bookingId,
+			@PathVariable long userId
+	) {
+		ResponseDto response = bookingService.cancelBooking(bookingId, userId);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	

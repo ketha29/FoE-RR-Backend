@@ -48,14 +48,10 @@ public class JwtAuthFilter extends OncePerRequestFilter{
 			return;
 		}
 		
-		System.err.println(authHeader);
-
 		// Extract token from token header
 		jwt = authHeader.substring(7);
 		username = jwtService.extractUsername(jwt);
-		
-		System.err.println(jwt);
-				
+						
 		// Check if the user name is not null and user is not jet authenticated
 		if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
