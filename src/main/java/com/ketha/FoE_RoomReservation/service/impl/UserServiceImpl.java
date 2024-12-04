@@ -220,7 +220,7 @@ public class UserServiceImpl implements UserService {
 			List<User> userList = null;
 			if (loginUser.getUserType().equals(UserType.admin) || loginUser.getUserType().equals(UserType.admin)) {
 				userList = userRepository.findByName(regexPattern);
-				List<UserDto> userDto = userList.stream().map((user) -> Utils.mapUserToUserDto(user))
+				List<UserDto> userDto = userList.stream().filter(user->user.getUserType() == UserType.regularUser).map((user) -> Utils.mapUserToUserDto(user))
 						.collect(Collectors.toList());
 				response.setStatusCode(200);
 				response.setMessage("Successful");
