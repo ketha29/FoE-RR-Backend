@@ -51,7 +51,14 @@ public class UserController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PostMapping("/add-user")
+	@GetMapping("/get-by-name/{fullName}")
+//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	public ResponseEntity<ResponseDto> getUserByFullName(@PathVariable String fullName) {
+		ResponseDto response =  service.getUserbyFullName(fullName);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
+	}
+	
+	@PostMapping("/register")
 //	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> register(@RequestBody User user) {
 		ResponseDto response =  service.register(user);
