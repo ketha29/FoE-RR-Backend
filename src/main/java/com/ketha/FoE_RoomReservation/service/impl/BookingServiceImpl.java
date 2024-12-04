@@ -4,17 +4,13 @@ import java.sql.Date;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ketha.FoE_RoomReservation.dto.BookingDto;
-import com.ketha.FoE_RoomReservation.dto.MailRequestDto;
+import com.ketha.FoE_RoomReservation.dto.NotificationDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.exception.CustomException;
 import com.ketha.FoE_RoomReservation.model.Booking;
@@ -27,7 +23,6 @@ import com.ketha.FoE_RoomReservation.repository.BookingRepository;
 import com.ketha.FoE_RoomReservation.repository.EventRepository;
 import com.ketha.FoE_RoomReservation.repository.RoomRepository;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
-import com.ketha.FoE_RoomReservation.service.impl.EmailServiceImpl.EmailType;
 import com.ketha.FoE_RoomReservation.service.interfac.BookingService;
 import com.ketha.FoE_RoomReservation.utils.Utils;
 
@@ -40,16 +35,15 @@ public class BookingServiceImpl implements BookingService{
 	private UserRepository userRepository;
 	private RoomRepository roomRepository;
 	private EventRepository eventRepository;
-	
-	@Autowired
 	private EmailServiceImpl emailService;
 	
 	@Autowired
-	public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository, RoomRepository roomRepository, EventRepository eventRepository) {
+	public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository, RoomRepository roomRepository, EventRepository eventRepository, EmailServiceImpl emailService) {
 		this.bookingRepository = bookingRepository;
 		this.userRepository = userRepository;
 		this.roomRepository = roomRepository;
 		this.eventRepository = eventRepository;
+		this.emailService = emailService;
 	}
 	
 	@Override
@@ -102,24 +96,28 @@ public class BookingServiceImpl implements BookingService{
 			List<Booking> existingBookings = room.getBookings();
 			List<Date> availableDateList = availableDates(bookingRequest, existingBookings);
 			
-			// Preparing Mail
-			MailRequestDto request = MailRequestDto.builder()
-					.to(user.getEmail())
-					.subject("Booking placed : FOE Room Reservation")
-					.userName(user.getUserName())
-					.purpose(bookingRequest.getDetails())
-					.dates(emailService.formatDateList(availableDateList))
-					.startTime(emailService.formatTime(bookingRequest.getStartTime()))
-					.endTime(emailService.formatTime(bookingRequest.getEndTime()))
+			// Place booking notification
+			NotificationDto notificationDto = NotificationDto.builder()
+					.loggedUser(Utils.mapUserToUserDto(user))
+					.bookedByUser(Utils.mapUserToUserDto(user))
+					.bookingDates(Utils.formatDateList(availableDateList))
+					.startTime(Utils.formatTime(bookingRequest.getStartTime()))
+					.endTime(Utils.formatTime(bookingRequest.getEndTime()))
 					.roomName(roomName)
+					.purpose(bookingRequest.getDetails())
 					.build();
+			
+			// If available set BookForUser
+			if(bookingRequest.getBookedForUser() != null) {
+				notificationDto.setBookForUser(Utils.mapUserToUserDto(bookingRequest.getBookedForUser()));
+			}						
 			
 			if(allowToBook(bookingRequest, user, availableDateList)) {
 				// If the recurrence type is none then set the default value 0 for recurrence period
 				if((bookingRequest.getRecurrence() == RecurrenceType.none)) {
 					bookingRequest.setRecurrencePeriod(1);
 				}
-				
+								
                 // Get the start and end dates from the available date list
 				Date startDate = availableDateList.get(0);
 				Date endDate = availableDateList.get(availableDateList.size() - 1);
@@ -148,8 +146,8 @@ public class BookingServiceImpl implements BookingService{
 						response.setMessage("Successful");
 						bookingRepository.save(booking);
 					}	
-					
-					emailService.postEmail(request, EmailType.placeBooking);
+
+					emailService.postEmail(notificationDto, true);
 					
 				} else {
 					throw new CustomException("Rooms are not available for those selected dates");
@@ -221,28 +219,32 @@ public class BookingServiceImpl implements BookingService{
 	}
 	
 	@Override
-	public ResponseDto cancelBooking(long bookingId) {
+	public ResponseDto cancelBooking(long bookingId, long userId) {
 		ResponseDto response = new ResponseDto();
-		
 		try {
 			Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new CustomException("Booking not found"));
-			User user = booking.getUser();
+			User loggedUser = userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
 			long eventId = booking.getEvent().getEventId();
 			List<Booking> recurringBookings  = bookingRepository.findAllByEventId(eventId);
 			List<Long> bookingIds = recurringBookings.stream().map(recurringBooking -> recurringBooking.getBookingId()).toList();
 			List<Date> bookingDates = recurringBookings.stream().map(recurringBooking->recurringBooking.getDate()).toList();
-			// Build mail request
-			MailRequestDto request = MailRequestDto.builder()
-					.to(user.getEmail())
-					.subject("Booking cancelled : FOE Room Reservation")
-					.userName(user.getUserName())
-					.dates(emailService.formatDateList(bookingDates))
-					.startTime(emailService.formatTime(booking.getStartTime()))
-					.endTime(emailService.formatTime(booking.getEndTime()))
-					.roomName(booking.getRoom().getRoomName().toString())
+						
+			// Cancelled notification
+			NotificationDto notificationDto = NotificationDto.builder()
+					.loggedUser(Utils.mapUserToUserDto(loggedUser))
+					.bookedByUser(Utils.mapUserToUserDto(booking.getUser()))
+					.bookingDates(Utils.formatDateList(bookingDates))
+					.startTime(Utils.formatTime(booking.getStartTime()))
+					.endTime(Utils.formatTime(booking.getEndTime()))
+					.roomName(booking.getRoom().getRoomName())
+					.purpose(booking.getDetails())
 					.build();
 			
-			System.err.println(request);
+			// If available set BookForUser
+			if(booking.getBookedForUser() != null) {
+				notificationDto.setBookForUser(Utils.mapUserToUserDto(booking.getBookedForUser()));
+			}	
+			
 			// Delete booking Implementation
 			bookingRepository.deleteAllById(bookingIds);
 			eventRepository.deleteById(eventId);
@@ -252,19 +254,8 @@ public class BookingServiceImpl implements BookingService{
 			response.setBookingList(bookingDto);
 			
 			// Send mail
-			emailService.postEmail(request, EmailType.userCancelBooking);
-			
-			if(user.getUserType() == UserType.regularUser) {
-				// notify admin when user cancels
-				request.setSubject("User cancelled booking : FOE Room Reservation");
-				emailService.postEmail(request, EmailType.notifyAdmin);
-			}else {
-				// notify user when admin or superadmin cancels
-				request.setTo(booking.getBookedForUser().getEmail());
-				request.setSubject("Admin cancelled booking : FOE Room Reservation");
-				emailService.postEmail(request, EmailType.notifyUser);
-			}
-			
+			emailService.postEmail(notificationDto, false);
+						
 		} catch (CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage(e.getMessage());

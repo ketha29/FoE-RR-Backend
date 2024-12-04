@@ -14,35 +14,35 @@
 			<tr>
 				<td style="padding: 3px">Username</td>
 				<td style="border-left: 2px solid red; padding: 5px;"
-					th:text="${request.userName}"></td>
+					th:text="${userName}"></td>
 			</tr>
 			<tr>
 				<td style="padding: 3px">Booked room</td>
 				<td style="border-left: 2px solid red; padding: 5px;"
-					th:text="${request.roomName}"></td>
+					th:text="${notification.roomName}"></td>
 			</tr>
 			<tr>
 				<td style="padding: 3px">Cancelled days</td>
 				<td style="border-left: 2px solid red;">
 					<ul style="list-style-type: none; padding: 0; margin: 0;">
-						<li th:each="date : ${dates}" style="margin: 5px;"
-							th:text="${request.date}"></li>
+						<li th:each="date : ${notification.bookingDates}" style="margin: 5px;"
+							th:text="${date}"></li>
 					</ul>
 				</td>
 			</tr>
 			<tr>
 				<td style="padding: 3px">From time</td>
 				<td style="border-left: 2px solid red; padding: 5px;"
-					th:text="${request.startTime}"></td>
+					th:text="${notification.startTime}"></td>
 			</tr>
 			<tr>
 				<td style="padding: 3px">To time</td>
 				<td style="border-left: 2px solid red; padding: 5px;"
-					th:text="${request.endTime}"></td>
+					th:text="${notification.endTime}"></td>
 			</tr>
 		</table>
 	</div>
 
-	<br>Thank you.
+	<br>Thank you for using the FOE Online Room Reservation service.
 </body>
 </html>

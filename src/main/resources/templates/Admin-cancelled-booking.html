@@ -4,7 +4,7 @@
 	<h2>FOE Room Reservation</h2>
 
 	Dear
-	<span th:text="${request.userName}"></span>,
+	<span th:text="${userName}"></span>,
 	<br>
 	<p>This is to inform you that your booking with the following
 		specifications has been cancelled by an admin.</p>
@@ -15,13 +15,13 @@
 			<tr>
 				<td style="padding: 3px">Booked room</td>
 				<td style="border-left: 2px solid red; padding: 5px;"
-					th:text="${request.roomName}"></td>
+					th:text="${notification.roomName}"></td>
 			</tr>
 			<tr>
 				<td style="padding: 3px">Cancelled days</td>
 				<td style="border-left: 2px solid red;">
 					<ul style="list-style-type: none; padding: 0; margin: 0;">
-						<li th:each="date : ${request.dates}" style="margin: 5px;"
+						<li th:each="date : ${notification.bookingDates}" style="margin: 5px;"
 							th:text="${date}"></li>
 					</ul>
 				</td>
@@ -29,12 +29,12 @@
 			<tr>
 				<td style="padding: 3px">From time</td>
 				<td style="border-left: 2px solid red; padding: 5px;"
-					th:text="${request.startTime}"></td>
+					th:text="${notification.startTime}"></td>
 			</tr>
 			<tr>
 				<td style="padding: 3px">To time</td>
 				<td style="border-left: 2px solid red; padding: 5px;"
-					th:text="${request.endTime}"></td>
+					th:text="${notification.endTime}"></td>
 			</tr>
 		</table>
 	</div>

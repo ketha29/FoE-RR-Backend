@@ -1,10 +1,7 @@
 package com.ketha.FoE_RoomReservation.service.impl;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
-import java.sql.Time;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,19 +10,18 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import com.ketha.FoE_RoomReservation.dto.MailRequestDto;
-import com.ketha.FoE_RoomReservation.model.User;
-import com.ketha.FoE_RoomReservation.model.User.UserType;
-import com.ketha.FoE_RoomReservation.repository.UserRepository;
+import com.ketha.FoE_RoomReservation.dto.NotificationDto;
+import com.ketha.FoE_RoomReservation.service.interfac.NotificationService;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailServiceImpl {
+	
+	private final SuccessNotificationServiceImpl successNotificationService;
+	private final CancelledNotificationImpl cancelNotificationService;
 
 	@Value("${spring.mail.username}")
 	private String sender;
@@ -33,83 +29,51 @@ public class EmailServiceImpl {
 	@Autowired
 	private JavaMailSender mailSender;
 
-	@Autowired
-	private SpringTemplateEngine templateEngine;
-
-	@Autowired
-	private UserRepository userRepository;
+	private NotificationService service;
 	
+	@Autowired
+	public EmailServiceImpl(SuccessNotificationServiceImpl successNotificationService, CancelledNotificationImpl cancelNotificationService) {
+		this.successNotificationService = successNotificationService;
+		this.cancelNotificationService = cancelNotificationService;
+	}
+
 	@Async
-	public void postEmail(MailRequestDto request, EmailType emailType) throws MessagingException {
+	public void postEmail(NotificationDto notificationDto, Boolean isSuccess) throws MessagingException {
 
-		Context context = new Context();
-		context.setVariable("request", request);
+		selectNotificationService(isSuccess);
+		
+		service.setNotification(notificationDto);
 
-		MimeMessage message = mailSender.createMimeMessage();
+		// Post email to logged user
+		MimeMessage message1 = mailSender.createMimeMessage();
+		MimeMessageHelper helper1 = new MimeMessageHelper(message1, StandardCharsets.UTF_8.name());
+		helper1.setFrom(sender);
+		helper1.setTo(service.getLoggedUserMail());
+		List<String> loggedUserMessage = service.getLoggedUserMessage();
+		helper1.setSubject(loggedUserMessage.getFirst());
+		helper1.setText(loggedUserMessage.getLast(), true);
+		sendEmail(message1);
 
-		MimeMessageHelper helper = new MimeMessageHelper(message, StandardCharsets.UTF_8.name());
-
-		helper.setFrom(sender);
-		if (emailType == EmailType.notifyAdmin) {
-			helper.setTo(getAdminMail());
-		} else {
-			helper.setTo(request.getTo());
+		if (service.getOtherUsersMail() != null) {
+			// Post email to Other user/users
+			MimeMessage message2 = mailSender.createMimeMessage();
+			MimeMessageHelper helper2 = new MimeMessageHelper(message2, StandardCharsets.UTF_8.name());
+			helper2.setFrom(sender);
+			helper2.setTo(service.getOtherUsersMail());
+			
+			// TODO format email template
+			List<String> otherUserMessage = service.getOtherUserMessage();
+			helper2.setSubject(otherUserMessage.getFirst());
+			helper2.setText(otherUserMessage.getLast(), true);
+			sendEmail(message2);
 		}
+	}
 
-		helper.setSubject(request.getSubject());
-
-		switch (emailType) {
-		case placeBooking:
-			// booking placed mail
-			helper.setText(templateEngine.process("booking-success", context), true);
-			break;
-		case userCancelBooking:
-			// cancel booking mail
-			helper.setText(templateEngine.process("booking-cancelled", context), true);
-
-			break;
-		case notifyAdmin:
-			// Notify admin when user cancelled booking
-			helper.setText(templateEngine.process("user-cancelled-booking", context), true);
-
-			break;
-		case notifyUser:
-			// Notify relevant user when admin cancelled booking
-			helper.setText(templateEngine.process("Admin-cancelled-booking", context), true);
-
-			break;
-		default:
-			break;
-		}
-
+	private void sendEmail(MimeMessage message) throws MessagingException {
 		mailSender.send(message);
 	}
-
-	public enum EmailType {
-		placeBooking, userCancelBooking, notifyAdmin, notifyUser
-	}
-
-	public List<String> formatDateList(List<Date> availableDateList) {
-
-		List<String> dates = new ArrayList<String>();
-
-		for (Date date : availableDateList) {
-			SimpleDateFormat sdf = new SimpleDateFormat("d MMM yyyy, EEE");
-			dates.add(sdf.format(date));
-		}
-		return dates;
-	}
-
-	public String formatTime(Time time) {
-		SimpleDateFormat sdf = new SimpleDateFormat("h:mm a");
-		return sdf.format(time);
-	};
-
-	private String[] getAdminMail() {
-
-		List<User> admins = userRepository.findUserByUserType(UserType.admin);
-		String[] adminMailList = admins.stream().map(admin -> admin.getEmail()).toArray(String[]::new);
-
-		return adminMailList;
+	
+	private void selectNotificationService(boolean isSuccess) {
+		service = (isSuccess) ? successNotificationService : cancelNotificationService;
 	}
 }

@@ -7,13 +7,13 @@ import lombok.Data;
 
 @Data
 @Builder
-public class MailRequestDto {
-	
-	private String to;
-	private String subject;
-	private String userName;
+public class NotificationDto {
+		
+	private UserDto loggedUser;
+	private UserDto bookedByUser;
+	private UserDto bookForUser;
 	private String purpose;
-	private List<String> dates;
+	private List<String> bookingDates;
 	private String startTime;
 	private String endTime;
 	private String roomName;
