@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.ketha.FoE_RoomReservation.dto.ChangePasswordDto;
 import com.ketha.FoE_RoomReservation.dto.LoginDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.dto.UserDto;
@@ -171,7 +172,6 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseDto getUserById(long userId) {
 		ResponseDto response = new ResponseDto();
-
 		try {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 			String loginUserName = auth.getName();
@@ -180,10 +180,12 @@ public class UserServiceImpl implements UserService {
 
 			User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
 			UserDto userDto;
+						
 			if ((loginUser.getUserType().equals(UserType.admin) && user.getUserType().equals(UserType.regularUser))
 					|| (loginUser.getUserType().equals(UserType.superAdmin)
 							&& ((user.getUserType().equals(UserType.regularUser))
-									|| (user.getUserType().equals(UserType.admin))))) {
+									|| (user.getUserType().equals(UserType.admin))))
+					|| (loginUser.equals(user))) {
 				userDto = Utils.mapUserToUserDto(user);
 				response.setStatusCode(200);
 				response.setMessage("Successful");
@@ -204,7 +206,8 @@ public class UserServiceImpl implements UserService {
 		}
 		return response;
 	}
-
+	
+	@Override
 	public ResponseDto getUserbyFullName(String fullName) {
 		ResponseDto response = new ResponseDto();
 		
@@ -218,7 +221,7 @@ public class UserServiceImpl implements UserService {
 					.orElseThrow(() -> new CustomException("login user not found"));
 			
 			List<User> userList = null;
-			if (loginUser.getUserType().equals(UserType.admin) || loginUser.getUserType().equals(UserType.admin)) {
+			if (loginUser.getUserType().equals(UserType.superAdmin) || loginUser.getUserType().equals(UserType.admin)) {
 				userList = userRepository.findByName(regexPattern);
 				List<UserDto> userDto = userList.stream().filter(user->user.getUserType() == UserType.regularUser).map((user) -> Utils.mapUserToUserDto(user))
 						.collect(Collectors.toList());
@@ -251,10 +254,10 @@ public class UserServiceImpl implements UserService {
 			String loginUserName = auth.getName();
 			User loginUser = userRepository.findByUserName(loginUserName)
 					.orElseThrow(() -> new CustomException("NotFound"));
-
+			
 			User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
 			UserDto userDto;
-			if ((loginUser.getUserType().equals(UserType.admin) && user.getUserType().equals(UserType.regularUser))
+			if (loginUser.getUserId() == user.getUserId() || (loginUser.getUserType().equals(UserType.admin) && user.getUserType().equals(UserType.regularUser))
 					|| (loginUser.getUserType().equals(UserType.superAdmin)
 							&& ((user.getUserType().equals(UserType.regularUser))
 									|| (user.getUserType().equals(UserType.admin))))) {
@@ -299,6 +302,39 @@ public class UserServiceImpl implements UserService {
 		} catch (Exception e) {
 			response.setStatusCode(500);
 			response.setMessage("Error in getting user: " + e.getMessage());
+		}
+		return response;
+	}
+	
+	@Override
+	public ResponseDto changePassword(ChangePasswordDto request) {
+		ResponseDto response = new ResponseDto();
+		try {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			String loginUserName = auth.getName();
+			User loginUser = userRepository.findByUserName(loginUserName)
+					.orElseThrow(() -> new CustomException("NotFound"));
+			
+			// Check if current password matches
+			if(!passwordEncoder.matches(request.getCurrentPassword(), loginUser.getPassword())) {
+				throw new CustomException("Incorrect password");
+			}
+			
+			// Check if new password and confirm password matches
+			if(!request.getNewPassWord().equals(request.getConfirmPassword())) {
+				throw new CustomException("Password does not match ");
+			}
+			
+			// Update password
+			loginUser.setPassword(passwordEncoder.encode(request.getNewPassWord()));
+			userRepository.save(loginUser);
+			
+			response.setStatusCode(200);
+			response.setMessage("Successful");
+			
+		} catch (CustomException e) {
+			response.setStatusCode(500);
+			response.setMessage("Error: " + e.getMessage());
 		}
 		return response;
 	}
