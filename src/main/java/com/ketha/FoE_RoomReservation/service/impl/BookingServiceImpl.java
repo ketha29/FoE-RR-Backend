@@ -219,7 +219,7 @@ public class BookingServiceImpl implements BookingService{
 	}
 	
 	@Override
-	public ResponseDto cancelBooking(long bookingId, long userId) {
+	public ResponseDto cancelBooking(long bookingId, long userId, boolean cancelSingleBooking) {
 		ResponseDto response = new ResponseDto();
 		try {
 			Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new CustomException("Booking not found"));
@@ -246,8 +246,13 @@ public class BookingServiceImpl implements BookingService{
 			}	
 			
 			// Delete booking Implementation
-			bookingRepository.deleteAllById(bookingIds);
-			eventRepository.deleteById(eventId);
+			if(!cancelSingleBooking || recurringBookings.size()==1) {
+				bookingRepository.deleteAllById(bookingIds);
+				eventRepository.deleteById(eventId);
+			} else {
+				bookingRepository.deleteById(bookingId);
+			}
+			
 			List<BookingDto> bookingDto = Utils.mapBookingListToBookingListDto(recurringBookings);
 			response.setStatusCode(200);
 			response.setMessage("Successful");
@@ -333,7 +338,21 @@ public class BookingServiceImpl implements BookingService{
 		boolean allow = false;
         boolean available = true;
         Calendar calendar = Calendar.getInstance();
-
+        
+        // Normalize the current day
+        Calendar currentDate = Calendar.getInstance();
+        currentDate.set(Calendar.HOUR_OF_DAY,0);
+        currentDate.set(Calendar.MINUTE, 0);
+        currentDate.set(Calendar.SECOND, 0);
+        currentDate.set(Calendar.MILLISECOND, 0);
+        
+        // Check if date is a future date
+        for (Date date : availableDateList) {
+        	if(date.before(currentDate.getTime())) {
+        		return allow;
+        	}
+		}
+        
         if(user.getUserType() == UserType.regularUser) {
             // Check the booking dates for weekdays and booking time between 8 AM to 5 PM
             for(Date date : availableDateList) {

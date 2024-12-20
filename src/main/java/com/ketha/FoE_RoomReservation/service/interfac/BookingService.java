@@ -17,7 +17,7 @@ public interface BookingService {
 	
 //	List<Date> addBooking(int userId, int roomId, Booking bookingRequest);
 
-	ResponseDto cancelBooking(long bookingId, long userId);
+	ResponseDto cancelBooking(long bookingId, long userId, boolean cancelSingleBooking);
 
 	ResponseDto addBooking(long userId, String roomName, Booking bookingRequest);
 
