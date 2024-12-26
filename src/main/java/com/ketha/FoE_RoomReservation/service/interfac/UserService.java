@@ -18,4 +18,6 @@ public interface UserService {
 	ResponseDto deleteUser(long userId);
 
 	ResponseDto getUserBookings(long userId);
+
+	ResponseDto getUserbyFullName(String fullName);
 }

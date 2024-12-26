@@ -43,9 +43,10 @@ public class SecurityConfig {
 //					.requestMatchers("/room/**").hasAnyRole("admin", "superAdmin")
 					.anyRequest()
 					.authenticated())
-				.authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+//				.authenticationProvider(authenticationProvider())
+//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 //				.formLogin(formLogin -> formLogin.permitAll())
+				.oauth2Login(oauth2->oauth2.defaultSuccessUrl("http://localhost:5173/booking/month"))
 				.build();
 	}
 	

@@ -116,16 +116,6 @@ public class UserServiceImpl implements UserService {
 		return response;
 	}
 
-//	@Override
-//	public LoginResponseDto login(LoginDto loginDto) {
-//		
-//		
-//		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUserName(), loginDto.getPassword()));
-//		User user = userRepository.findByUserName(loginDto.getUserName()).orElseThrow();
-//		var jwtToken = jwtService.generateToken((UserDetails) user);
-//		return LoginResponseDto.builder().token(jwtToken).build();
-//	}
-//	
 	// Get all users
 	@Override
 	public ResponseDto getAllUsers() {
