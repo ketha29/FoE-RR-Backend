@@ -6,14 +6,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ketha.FoE_RoomReservation.dto.ChangePasswordDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.service.impl.UserServiceImpl;
@@ -76,13 +74,6 @@ public class UserController {
 //	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> deleteUser(@PathVariable long userId) {
 		ResponseDto response =  service.deleteUser(userId);
-		return ResponseEntity.status(response.getStatusCode()).body(response);
-	}
-	
-	@PatchMapping("/update-password")
-	public ResponseEntity<ResponseDto> updatePassword(@RequestBody 
-			ChangePasswordDto request) {
-		ResponseDto response =  service.changePassword(request);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 }

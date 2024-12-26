@@ -1,7 +1,7 @@
 package com.ketha.FoE_RoomReservation.service.interfac;
 
-import com.ketha.FoE_RoomReservation.dto.ChangePasswordDto;
 import com.ketha.FoE_RoomReservation.dto.LoginDto;
+import com.ketha.FoE_RoomReservation.dto.LoginResponseDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.model.User;
 
@@ -18,8 +18,4 @@ public interface UserService {
 	ResponseDto deleteUser(long userId);
 
 	ResponseDto getUserBookings(long userId);
-
-	ResponseDto changePassword(ChangePasswordDto request);
-
-	ResponseDto getUserbyFullName(String fullName);
 }
