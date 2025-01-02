@@ -70,14 +70,13 @@ public class BookingController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PostMapping("/add-booking/{roomId}/{userId}")
+	@PostMapping("/add-booking/{roomId}")
 //	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> addBooking(
-			@PathVariable int userId,
 			@PathVariable String roomId,
 			@RequestBody Booking bookingRequest
 	){
-		ResponseDto response = bookingService.addBooking(userId, roomId, bookingRequest);
+		ResponseDto response = bookingService.addBooking(roomId, bookingRequest);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
@@ -91,13 +90,12 @@ public class BookingController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@DeleteMapping("/delete-booking/{bookingId}/{userId}/{cancelSingleBooking}")
+	@DeleteMapping("/delete-booking/{bookingId}/{cancelSingleBooking}")
 	public ResponseEntity<ResponseDto> cancelBooking(
 			@PathVariable long bookingId,
-			@PathVariable long userId,
 			@PathVariable boolean cancelSingleBooking
 	) {
-		ResponseDto response = bookingService.cancelBooking(bookingId, userId, cancelSingleBooking);
+		ResponseDto response = bookingService.cancelBooking(bookingId, cancelSingleBooking);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	

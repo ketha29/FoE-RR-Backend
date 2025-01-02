@@ -31,7 +31,7 @@ public class UserController {
 	}
 	 
 	@GetMapping("/all")
-//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> getAllUsers() {
 		ResponseDto response =  service.getAllUsers();
 		return ResponseEntity.status(response.getStatusCode()).body(response);
@@ -52,13 +52,13 @@ public class UserController {
 	}
 	
 	@GetMapping("/get-by-name/{fullName}")
-//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> getUserByFullName(@PathVariable String fullName) {
 		ResponseDto response =  service.getUserbyFullName(fullName);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
-	@PostMapping("/register")
+	@PostMapping("/add-user")
 //	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> register(@RequestBody User user) {
 		ResponseDto response =  service.register(user);

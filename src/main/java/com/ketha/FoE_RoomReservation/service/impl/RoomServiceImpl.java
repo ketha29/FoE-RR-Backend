@@ -1,8 +1,6 @@
 package com.ketha.FoE_RoomReservation.service.impl;
 
 import java.sql.Date;
-import java.sql.Time;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -14,7 +12,6 @@ import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.dto.RoomDto;
 import com.ketha.FoE_RoomReservation.exception.CustomException;
 import com.ketha.FoE_RoomReservation.model.Booking;
-import com.ketha.FoE_RoomReservation.model.Booking.RecurrenceType;
 import com.ketha.FoE_RoomReservation.model.Room;
 import com.ketha.FoE_RoomReservation.repository.BookingRepository;
 import com.ketha.FoE_RoomReservation.repository.RoomRepository;

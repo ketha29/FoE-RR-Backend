@@ -15,6 +15,7 @@ import com.ketha.FoE_RoomReservation.model.User.UserType;
 public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByUserName(String userName);
+	Optional<User> findByEmail(String email);
 	Boolean existsByUserName(String userName);
 	Boolean existsByEmail(String email);
 	List<User> findUserByUserType(UserType userType);

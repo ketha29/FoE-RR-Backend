@@ -5,15 +5,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import com.ketha.FoE_RoomReservation.dto.LoginDto;
 import com.ketha.FoE_RoomReservation.dto.ResponseDto;
 import com.ketha.FoE_RoomReservation.dto.UserDto;
 import com.ketha.FoE_RoomReservation.exception.BadRequestException;
@@ -22,31 +20,27 @@ import com.ketha.FoE_RoomReservation.exception.ForbiddenException;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
-import com.ketha.FoE_RoomReservation.security.CustomUserDetailsService;
 import com.ketha.FoE_RoomReservation.security.JwtService;
 import com.ketha.FoE_RoomReservation.service.interfac.UserService;
 import com.ketha.FoE_RoomReservation.utils.Utils;
+
+import jakarta.servlet.http.HttpSession;
 
 @Service
 public class UserServiceImpl implements UserService {
 
 	private UserRepository userRepository;
-	private PasswordEncoder passwordEncoder;
-	private AuthenticationManager authenticationManager;
+//	private PasswordEncoder passwordEncoder;
+//	private AuthenticationManager authenticationManager;
 	private JwtService jwtService;
-	private CustomUserDetailsService customUserDetailsService;
+//	private CustomUserDetailsService customUserDetailsService;
 
 	// Setter for dependency injection
 	// UserService has its UserRepository dependency set at the time of creation
 	@Autowired
-	public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-			AuthenticationManager authenticationManager, JwtService jwtService,
-			CustomUserDetailsService customUserDetailsService) {
+	public UserServiceImpl(UserRepository userRepository, JwtService jwtService) {
 		this.userRepository = userRepository;
-		this.passwordEncoder = passwordEncoder;
-		this.authenticationManager = authenticationManager;
 		this.jwtService = jwtService;
-		this.customUserDetailsService = customUserDetailsService;
 	}
 
 	// Register user
@@ -58,8 +52,8 @@ public class UserServiceImpl implements UserService {
 			if (user.getUserType() == null) {
 				user.setUserType(UserType.regularUser);
 			}
-			if (userRepository.existsByUserName(user.getUserName())) {
-				throw new CustomException(user.getUserName() + " Already exists");
+			if (userRepository.existsByEmail(user.getEmail())) {
+				throw new CustomException(user.getEmail() + " Already exists");
 			}
 			if (user.getUserName() == null || user.getUserName().isBlank() || user.getPassword() == null
 					|| user.getPassword().isBlank()) {
@@ -68,7 +62,7 @@ public class UserServiceImpl implements UserService {
 //			if(user.getUserName() == null || user.getUserName().isBlank() || user.getPassword() == null || user.getPassword().isBlank()) {
 //	            throw new BadRequestException("User name or password shouldn't be empty");
 //			}
-			user.setPassword(passwordEncoder.encode(user.getPassword()));
+//			user.setPassword(passwordEncoder.encode(user.getPassword()));
 			User savedUser = userRepository.save(user);
 //			var jwtToken = jwtService.generateToken(user);
 			UserDto userDto = Utils.mapUserToUserDto(savedUser);
@@ -91,15 +85,14 @@ public class UserServiceImpl implements UserService {
 
 	// User login
 	@Override
-	public ResponseDto login(LoginDto loginDto) {
+	public ResponseDto login(Authentication authentication) {
 		ResponseDto response = new ResponseDto();
 
 		try {
-			authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(loginDto.getUserName(), loginDto.getPassword()));
-			var user = userRepository.findByUserName(loginDto.getUserName())
+			OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+			var user = userRepository.findByEmail(oAuth2User.getAttribute("email"))
 					.orElseThrow(() -> new BadCredentialsException(null));
-			var jwtToken = jwtService.generateToken(customUserDetailsService.loadUserByUsername(user.getUserName()));
+			var jwtToken = jwtService.generateToken(oAuth2User);
 			response.setUserType(user.getUserType());
 			response.setStatusCode(200);
 			response.setMessage("User login successful");
@@ -122,28 +115,34 @@ public class UserServiceImpl implements UserService {
 		ResponseDto response = new ResponseDto();
 
 		try {
-			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			String loginUserName = auth.getName();
-			User loginUser = userRepository.findByUserName(loginUserName)
-					.orElseThrow(() -> new CustomException("NotFound"));
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if (authentication instanceof OAuth2AuthenticationToken) {
+				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+				OAuth2User oauth2User = oauthToken.getPrincipal();
 
-			List<User> userList = null;
-			if (loginUser.getUserType().equals(UserType.admin)) {
-				userList = userRepository.findUserByUserType(UserType.regularUser);
-			} else if (loginUser.getUserType().equals(UserType.superAdmin)) {
-				userList = userRepository.findUserByUserType(UserType.admin);
-				List<User> regularUsers = userRepository.findUserByUserType(UserType.regularUser);
-				userList = Stream.concat(userList.stream(), regularUsers.stream()).collect(Collectors.toList());
+				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+						.orElseThrow(() -> new CustomException("NotFound"));
+
+				List<User> userList = null;
+				if (loginUser.getUserType().equals(UserType.admin)) {
+					userList = userRepository.findUserByUserType(UserType.regularUser);
+				} else if (loginUser.getUserType().equals(UserType.superAdmin)) {
+					userList = userRepository.findUserByUserType(UserType.admin);
+					List<User> regularUsers = userRepository.findUserByUserType(UserType.regularUser);
+					userList = Stream.concat(userList.stream(), regularUsers.stream()).collect(Collectors.toList());
+				} else {
+					throw new ForbiddenException("Forbidden");
+				}
+
+				List<UserDto> userDto = userList.stream().map((user) -> Utils.mapUserToUserDto(user))
+						.collect(Collectors.toList());
+				response.setUserList(userDto);
+				response.setStatusCode(200);
+				response.setMessage("Successsful");
+
 			} else {
-				throw new ForbiddenException("Forbidden");
+				throw new CustomException("failed authorization");
 			}
-
-			List<UserDto> userDto = userList.stream().map((user) -> Utils.mapUserToUserDto(user))
-					.collect(Collectors.toList());
-			response.setUserList(userDto);
-			response.setStatusCode(200);
-			response.setMessage("Successsful");
-
 		} catch (CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage("User not found: " + e.getMessage());
@@ -163,23 +162,29 @@ public class UserServiceImpl implements UserService {
 		ResponseDto response = new ResponseDto();
 
 		try {
-			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			String loginUserName = auth.getName();
-			User loginUser = userRepository.findByUserName(loginUserName)
-					.orElseThrow(() -> new CustomException("NotFound"));
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if (authentication instanceof OAuth2AuthenticationToken) {
+				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+				OAuth2User oauth2User = oauthToken.getPrincipal();
 
-			User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
-			UserDto userDto;
-			if ((loginUser.getUserType().equals(UserType.admin) && user.getUserType().equals(UserType.regularUser))
-					|| (loginUser.getUserType().equals(UserType.superAdmin)
-							&& ((user.getUserType().equals(UserType.regularUser))
-									|| (user.getUserType().equals(UserType.admin))))) {
-				userDto = Utils.mapUserToUserDto(user);
-				response.setStatusCode(200);
-				response.setMessage("Successful");
-				response.setUser(userDto);
+				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+						.orElseThrow(() -> new CustomException("NotFound"));
+
+				User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
+				UserDto userDto;
+				if ((loginUser.getUserType().equals(UserType.admin) && user.getUserType().equals(UserType.regularUser))
+						|| (loginUser.getUserType().equals(UserType.superAdmin)
+								&& ((user.getUserType().equals(UserType.regularUser))
+										|| (user.getUserType().equals(UserType.admin))))) {
+					userDto = Utils.mapUserToUserDto(user);
+					response.setStatusCode(200);
+					response.setMessage("Successful");
+					response.setUser(userDto);
+				} else {
+					throw new ForbiddenException("Forbidden");
+				}
 			} else {
-				throw new ForbiddenException("Forbidden");
+				throw new CustomException("failed authorization");
 			}
 
 		} catch (CustomException e) {
@@ -195,28 +200,35 @@ public class UserServiceImpl implements UserService {
 		return response;
 	}
 
+	@Override
 	public ResponseDto getUserbyFullName(String fullName) {
 		ResponseDto response = new ResponseDto();
-		
+
 		String[] names = fullName.trim().split("\\s+");
 		String regexPattern = names[0];
 		regexPattern = names.length > 1 ? names[1] : String.join("|", names); // Handling null LastName
 		try {
-			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			String loginUserName = auth.getName();
-			User loginUser = userRepository.findByUserName(loginUserName)
-					.orElseThrow(() -> new CustomException("login user not found"));
-			
-			List<User> userList = null;
-			if (loginUser.getUserType().equals(UserType.admin) || loginUser.getUserType().equals(UserType.admin)) {
-				userList = userRepository.findByName(regexPattern);
-				List<UserDto> userDto = userList.stream().filter(user->user.getUserType() == UserType.regularUser).map((user) -> Utils.mapUserToUserDto(user))
-						.collect(Collectors.toList());
-				response.setStatusCode(200);
-				response.setMessage("Successful");
-				response.setUserList(userDto);
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if (authentication instanceof OAuth2AuthenticationToken) {
+				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+				OAuth2User oauth2User = oauthToken.getPrincipal();
+
+				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+						.orElseThrow(() -> new CustomException("NotFound"));
+
+				List<User> userList = null;
+				if (loginUser.getUserType().equals(UserType.admin) || loginUser.getUserType().equals(UserType.admin)) {
+					userList = userRepository.findByName(regexPattern);
+					List<UserDto> userDto = userList.stream().filter(user -> user.getUserType() == UserType.regularUser)
+							.map((user) -> Utils.mapUserToUserDto(user)).collect(Collectors.toList());
+					response.setStatusCode(200);
+					response.setMessage("Successful");
+					response.setUserList(userDto);
+				} else {
+					throw new ForbiddenException("Forbidden");
+				}
 			} else {
-				throw new ForbiddenException("Forbidden");
+				throw new CustomException("failed authorization");
 			}
 
 		} catch (CustomException e) {
@@ -237,23 +249,29 @@ public class UserServiceImpl implements UserService {
 		ResponseDto response = new ResponseDto();
 
 		try {
-			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			String loginUserName = auth.getName();
-			User loginUser = userRepository.findByUserName(loginUserName)
-					.orElseThrow(() -> new CustomException("NotFound"));
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if (authentication instanceof OAuth2AuthenticationToken) {
+				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+				OAuth2User oauth2User = oauthToken.getPrincipal();
 
-			User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
-			UserDto userDto;
-			if ((loginUser.getUserType().equals(UserType.admin) && user.getUserType().equals(UserType.regularUser))
-					|| (loginUser.getUserType().equals(UserType.superAdmin)
-							&& ((user.getUserType().equals(UserType.regularUser))
-									|| (user.getUserType().equals(UserType.admin))))) {
-				userDto = Utils.mapUserToUserEntityPlusBookings(user);
-				response.setStatusCode(200);
-				response.setMessage("Successful");
-				response.setUser(userDto);
+				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+						.orElseThrow(() -> new CustomException("NotFound"));
+
+				User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
+				UserDto userDto;
+				if ((loginUser.getUserType().equals(UserType.admin) && user.getUserType().equals(UserType.regularUser))
+						|| (loginUser.getUserType().equals(UserType.superAdmin)
+								&& ((user.getUserType().equals(UserType.regularUser))
+										|| (user.getUserType().equals(UserType.admin))))) {
+					userDto = Utils.mapUserToUserEntityPlusBookings(user);
+					response.setStatusCode(200);
+					response.setMessage("Successful");
+					response.setUser(userDto);
+				} else {
+					throw new ForbiddenException("Forbidden");
+				}
 			} else {
-				throw new ForbiddenException("Forbidden");
+				throw new CustomException("failed authorization");
 			}
 
 		} catch (CustomException e) {
@@ -279,10 +297,24 @@ public class UserServiceImpl implements UserService {
 	public ResponseDto deleteUser(long userId) {
 		ResponseDto response = new ResponseDto();
 		try {
-			userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
-			userRepository.deleteById(userId);
-			response.setStatusCode(200);
-			response.setMessage("Successful");
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if (authentication instanceof OAuth2AuthenticationToken) {
+				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+				OAuth2User oauth2User = oauthToken.getPrincipal();
+
+				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+						.orElseThrow(() -> new CustomException("NotFound"));
+				if (loginUser.getUserType().equals(UserType.admin)
+						|| loginUser.getUserType().equals(UserType.superAdmin)) {
+					userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found"));
+					userRepository.deleteById(userId);
+					response.setStatusCode(200);
+					response.setMessage("Successful");
+				}
+
+			} else {
+				throw new CustomException("failed authorization");
+			}
 		} catch (CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage(e.getMessage());
@@ -292,4 +324,5 @@ public class UserServiceImpl implements UserService {
 		}
 		return response;
 	}
+
 }
