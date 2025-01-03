@@ -1,75 +1,50 @@
 package com.ketha.FoE_RoomReservation.security;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
+import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-	
-	private CustomUserDetailsService service;
+
+	private CustomAuthenticationSuccessHandler successHandler;
 	private JwtAuthFilter jwtAuthFilter;
-	
+
 	@Autowired
-	public  SecurityConfig(CustomUserDetailsService service, JwtAuthFilter jwtAuthFilter) {
-		this.service = service;
+	public SecurityConfig(CustomAuthenticationSuccessHandler successHandler, JwtAuthFilter jwtAuthFilter) {
+		this.successHandler = successHandler;
 		this.jwtAuthFilter = jwtAuthFilter;
-		
 	}
 
 	// Customizing the default security configuration
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		return http
-				.csrf(AbstractHttpConfigurer::disable)
-				.authorizeHttpRequests(request -> request
-					.requestMatchers("/user/**", "room/**", "/booking/**", "/auth/**").permitAll()
-//					.requestMatchers("/room/**").hasAnyRole("admin", "superAdmin")
-					.anyRequest()
-					.authenticated())
-				.authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-//				.formLogin(formLogin -> formLogin.permitAll())
-				.build();
-	}
-	
-	@Bean
-	public UserDetailsService userDetailsService() {
-		return service;
-	}
-	
-	// Load the user from database and use that for data authentication
-	@Bean
-	public AuthenticationProvider authenticationProvider() {
-		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-		provider.setUserDetailsService(service);
-		provider.setPasswordEncoder(passwordEncoder());
-		return provider;
-	}
-	
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-	
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
-		return authenticationConfiguration.getAuthenticationManager();
+		return http.csrf(AbstractHttpConfigurer::disable).cors(cors -> cors.configurationSource(request -> {
+			CorsConfiguration config = new CorsConfiguration();
+			config.setAllowedOrigins(List.of("http://localhost:5173")); // Allow the frontend origin
+			config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed HTTP methods
+			config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allowed headers
+			config.setAllowCredentials(true); // Allow credentials (cookies, etc.)
+			return config;
+		})).authorizeHttpRequests(request -> request.requestMatchers("/user/**", "room/**", "/booking/**", "/auth/**")
+				.permitAll().anyRequest().authenticated())
+				.oauth2Login(oauth2 -> oauth2
+						.successHandler(successHandler))
+				.logout((logout) -> logout
+						.deleteCookies("JSESSIONID", "OAuth2-Token")
+						.clearAuthentication(true)
+						.invalidateHttpSession(true))
+				.addFilterBefore(jwtAuthFilter, OAuth2LoginAuthenticationFilter.class).build();
 	}
 }

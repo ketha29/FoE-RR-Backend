@@ -9,7 +9,7 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
@@ -34,19 +34,19 @@ public class JwtService {
 	}
 	
 	// Generate a token only from user details
-	public String generateToken(UserDetails userDetails) {
-		return generateToken(new HashMap<>(), userDetails);
+	public String generateToken(OAuth2User oAuth2User) {
+		return generateToken(new HashMap<>(), oAuth2User);
 	}
 	
 	// Generate a token out of extra claims and user details
 	public String generateToken(
 			Map<String, Object> extraClaims,
-			UserDetails userDetails
+			OAuth2User oAuth2User
 	) {
 		return Jwts
 				.builder()
 				.setClaims(extraClaims)
-				.setSubject(userDetails.getUsername())
+				.setSubject(oAuth2User.getAttribute("name"))
 				.setIssuedAt(new Date(System.currentTimeMillis()))
 				.setExpiration(new Date(System.currentTimeMillis() + VALIDITY))
 				.signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -54,9 +54,9 @@ public class JwtService {
 	}
 	
 	// Method to validate token (Validate if the token belongs to the user details
-	public boolean isTokenValid(String token, UserDetails userDetails) {
+	public boolean isTokenValid(String token, OAuth2User oAuth2User) {
 		final String username = extractUsername(token);
-		return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+		return (username.equals(oAuth2User.getAttribute("name"))) && !isTokenExpired(token);
 	}
 	
 	private boolean isTokenExpired(String token) {
