@@ -70,7 +70,7 @@ public class EmailServiceImpl {
 	}
 
 	private void sendEmail(MimeMessage message) throws MessagingException {
-//		mailSender.send(message);
+		mailSender.send(message);
 	}
 	
 	private void selectNotificationService(boolean isSuccess) {
