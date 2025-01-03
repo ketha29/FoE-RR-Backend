@@ -24,8 +24,6 @@ import com.ketha.FoE_RoomReservation.security.JwtService;
 import com.ketha.FoE_RoomReservation.service.interfac.UserService;
 import com.ketha.FoE_RoomReservation.utils.Utils;
 
-import jakarta.servlet.http.HttpSession;
-
 @Service
 public class UserServiceImpl implements UserService {
 

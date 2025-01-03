@@ -49,7 +49,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             OAuth2AuthenticationToken updatedAuthentication = new OAuth2AuthenticationToken(oAuth2User, authorities, "sub");
         	SecurityContextHolder.getContext().setAuthentication(updatedAuthentication);
 
-        	response.sendRedirect("http://localhost:5173/booking/month"); // Redirect user to the page after login
+        	response.sendRedirect("http://localhost:5173/auth/login"); // Redirect user to the page after login
     	} else {
     		
     		HttpSession session = request.getSession(false);
