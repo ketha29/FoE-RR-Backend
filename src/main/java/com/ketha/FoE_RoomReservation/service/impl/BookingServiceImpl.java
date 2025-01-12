@@ -42,7 +42,7 @@ public class BookingServiceImpl implements BookingService {
 	private EmailServiceImpl emailService;
 
 	@Autowired
-	public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository, RoomRepository roomRepository, EventRepository eventRepository) {
+	public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository, RoomRepository roomRepository, EventRepository eventRepository, EmailServiceImpl emailService) {
 		this.bookingRepository = bookingRepository;
 		this.userRepository = userRepository;
 		this.roomRepository = roomRepository;
