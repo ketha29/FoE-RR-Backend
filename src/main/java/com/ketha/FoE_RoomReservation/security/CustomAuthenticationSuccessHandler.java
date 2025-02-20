@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +25,9 @@ import jakarta.servlet.http.HttpSession;
 
 @Component
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+	
+	@Value("${frontend.url}")
+	private String frontEndUrl;
 	
 	private UserRepository userRepository;
 	
@@ -49,7 +53,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             OAuth2AuthenticationToken updatedAuthentication = new OAuth2AuthenticationToken(oAuth2User, authorities, "sub");
         	SecurityContextHolder.getContext().setAuthentication(updatedAuthentication);
 
-        	response.sendRedirect("http://localhost:5173/auth/login"); // Redirect user to the page after login
+        	response.sendRedirect(frontEndUrl+"/auth/login"); // Redirect user to the page after login
     	} else {
     		
     		HttpSession session = request.getSession(false);
