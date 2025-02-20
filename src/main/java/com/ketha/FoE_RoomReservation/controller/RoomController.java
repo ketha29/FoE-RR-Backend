@@ -57,6 +57,7 @@ public class RoomController {
 	
 	@PostMapping("/add-room")
 	public ResponseEntity<ResponseDto> addRoom(
+			@RequestParam(value = "isOnlyAdminBooking", required = false) boolean isOnlyBookedByAdmin,
 			@RequestParam(value = "capacity", required = false) Integer capacity,
 			@RequestParam(value = "roomName", required = false) String roomName,
 			@RequestParam(value = "description", required = false) String description
@@ -67,7 +68,7 @@ public class RoomController {
 			response.setMessage("These fields(roomName, capacity) shouldn't be empty");
 			return ResponseEntity.status(response.getStatusCode()).body(response);
 		}
-		ResponseDto response =  roomService.addRoom(capacity, roomName, description);
+		ResponseDto response =  roomService.addRoom(capacity, roomName, description,isOnlyBookedByAdmin);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	

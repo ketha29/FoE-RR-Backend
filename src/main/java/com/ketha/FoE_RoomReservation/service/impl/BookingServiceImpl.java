@@ -42,7 +42,7 @@ public class BookingServiceImpl implements BookingService {
 	private EmailServiceImpl emailService;
 
 	@Autowired
-	public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository, RoomRepository roomRepository, EventRepository eventRepository) {
+	public BookingServiceImpl(BookingRepository bookingRepository, UserRepository userRepository, RoomRepository roomRepository, EventRepository eventRepository, EmailServiceImpl emailService) {
 		this.bookingRepository = bookingRepository;
 		this.userRepository = userRepository;
 		this.roomRepository = roomRepository;
@@ -103,7 +103,11 @@ public class BookingServiceImpl implements BookingService {
 						.orElseThrow(() -> new CustomException("NotFound"));
 				Room room = roomRepository.findByRoomName(roomName)
 						.orElseThrow(() -> new CustomException("Room not found"));
-//			Room room = roomRepository.findById(roomId).orElseThrow(() -> new CustomException("Room not found"));
+				
+				if(room.isOnlyBookedByAdmin() && user.getUserType().equals(UserType.regularUser)) {
+					throw new CustomException("Booking this room is only allowed for admins");
+				}
+				
 				List<Booking> existingBookings = room.getBookings();
 				List<Date> availableDateList = availableDates(bookingRequest, existingBookings);
 
@@ -391,6 +395,15 @@ public class BookingServiceImpl implements BookingService {
 					available = false;
 					break;
 				}
+				
+				// Regular User cannot book beyond 4 week time
+				int weekOfYear = calendar.get(Calendar.WEEK_OF_YEAR);
+				int currentWeekOfYear = currentDate.get(Calendar.WEEK_OF_YEAR);
+				if(weekOfYear>currentWeekOfYear + 4) {
+					available = false;
+					break;
+				}
+				
 				if (bookingRequest.getStartTime().toLocalTime().isBefore(LocalTime.parse("08:00:00"))
 						|| bookingRequest.getEndTime().toLocalTime().isAfter(LocalTime.parse("17:00:00"))) {
 					available = false;
@@ -401,7 +414,7 @@ public class BookingServiceImpl implements BookingService {
 			if (available && (bookingRequest.getRecurrence() == RecurrenceType.none)) {
 				allow = true;
 			}
-		} else if (user.getUserType() == UserType.admin) {
+		} else if (user.getUserType() == UserType.admin || user.getUserType() == UserType.superAdmin) {
 			if ((bookingRequest.getRecurrence() == RecurrenceType.none)
 					|| ((bookingRequest.getRecurrence() == RecurrenceType.daily)
 							&& (bookingRequest.getRecurrencePeriod() <= 10))
