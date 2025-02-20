@@ -20,7 +20,6 @@ import com.ketha.FoE_RoomReservation.exception.ForbiddenException;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
-import com.ketha.FoE_RoomReservation.security.JwtService;
 import com.ketha.FoE_RoomReservation.service.interfac.UserService;
 import com.ketha.FoE_RoomReservation.utils.Utils;
 
@@ -28,17 +27,12 @@ import com.ketha.FoE_RoomReservation.utils.Utils;
 public class UserServiceImpl implements UserService {
 
 	private UserRepository userRepository;
-//	private PasswordEncoder passwordEncoder;
-//	private AuthenticationManager authenticationManager;
-	private JwtService jwtService;
-//	private CustomUserDetailsService customUserDetailsService;
 
 	// Setter for dependency injection
 	// UserService has its UserRepository dependency set at the time of creation
 	@Autowired
-	public UserServiceImpl(UserRepository userRepository, JwtService jwtService) {
+	public UserServiceImpl(UserRepository userRepository) {
 		this.userRepository = userRepository;
-		this.jwtService = jwtService;
 	}
 
 	// Register user
@@ -90,11 +84,9 @@ public class UserServiceImpl implements UserService {
 			OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 			var user = userRepository.findByEmail(oAuth2User.getAttribute("email"))
 					.orElseThrow(() -> new BadCredentialsException(null));
-			var jwtToken = jwtService.generateToken(oAuth2User);
 			response.setUserType(user.getUserType());
 			response.setStatusCode(200);
 			response.setMessage("User login successful");
-			response.setToken(jwtToken);
 			response.setUserId(user.getUserId());
 
 		} catch (BadCredentialsException e) {
