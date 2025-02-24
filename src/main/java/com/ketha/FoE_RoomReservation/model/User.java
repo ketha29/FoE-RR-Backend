@@ -33,15 +33,12 @@ public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long userId;
-	@Column(unique=true, nullable=false)
-	private String userName;
 	@Column(nullable=false)
 	private String firstName;
 	private String lastName;
 	@Column(unique = true, nullable = false)
 	private String email;
 	private long phoneNo;
-	private String password;
 	@Enumerated(EnumType.STRING)
 	private UserType userType;
 	

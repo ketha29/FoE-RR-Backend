@@ -59,7 +59,7 @@ public class UserController {
 	}
 	
 	@PostMapping("/add-user")
-//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> register(@RequestBody User user) {
 		ResponseDto response =  service.register(user);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
@@ -71,7 +71,7 @@ public class UserController {
 //	}
 	
 	@DeleteMapping("delete-user/{userId}")
-//	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
+	@PreAuthorize("hasAuthority('admin') or hasAuthority('superAdmin')")
 	public ResponseEntity<ResponseDto> deleteUser(@PathVariable long userId) {
 		ResponseDto response =  service.deleteUser(userId);
 		return ResponseEntity.status(response.getStatusCode()).body(response);

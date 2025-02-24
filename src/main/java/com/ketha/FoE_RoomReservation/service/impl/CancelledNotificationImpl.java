@@ -61,7 +61,7 @@ public class CancelledNotificationImpl implements NotificationService {
 		
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
-		context.setVariable("userName", loggedUser.getUserName());
+		context.setVariable("userName", loggedUser.getFirstName().concat(" "+loggedUser.getLastName()));
 		notifyLoggedUser.add(templateEngine.process("booking-cancelled", context));
 		return notifyLoggedUser;
 	}
@@ -82,7 +82,7 @@ public class CancelledNotificationImpl implements NotificationService {
 
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
-		context.setVariable("userName", otherUser.getUserName());
+		context.setVariable("userName", otherUser.getFirstName().concat(" "+otherUser.getLastName()));
 		notifyRegularUser.add(templateEngine.process("Admin-cancelled-booking", context));
 
 		return notifyRegularUser;
@@ -95,7 +95,7 @@ public class CancelledNotificationImpl implements NotificationService {
 
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
-		context.setVariable("userName", loggedUser.getUserName());
+		context.setVariable("userName", loggedUser.getFirstName().concat(" "+loggedUser.getLastName()));
 		notifyAdminUser.add(templateEngine.process("user-cancelled-booking", context));
 		return notifyAdminUser;
 	}
