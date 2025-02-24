@@ -40,7 +40,7 @@ public class SuccessNotificationServiceImpl implements NotificationService {
 
 		loggedUser = notificationDto.getLoggedUser();
 
-		if (loggedUser.getUserType() == UserType.admin) {
+		if (loggedUser.getUserType() == UserType.admin || loggedUser.getUserType() == UserType.superAdmin) {
 			otherUser = (bookForUser != null) ? bookForUser : null;
 		}
 	}
@@ -77,7 +77,6 @@ public class SuccessNotificationServiceImpl implements NotificationService {
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
 		context.setVariable("userName", otherUser.getFirstName().concat(" "+otherUser.getLastName()));
-		// TODO change the mail format
 		notifyRegularUser.add(templateEngine.process("book-for-user-booking-success.html", context));
 
 		return notifyRegularUser;

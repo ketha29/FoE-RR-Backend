@@ -46,7 +46,7 @@ public class CancelledNotificationImpl implements NotificationService {
 		UserDto bookByUser	= (notificationDto.getBookedByUser().getUserType() == UserType.regularUser)? notificationDto.getBookedByUser():null;
 		loggedUser = notificationDto.getLoggedUser();
 
-		if (loggedUser.getUserType() == UserType.admin) {
+		if (loggedUser.getUserType() == UserType.admin || loggedUser.getUserType() == UserType.superAdmin) {
 			otherUser = (bookForUser != null) ? bookForUser : bookByUser;
 		} 
 	}
@@ -123,6 +123,7 @@ public class CancelledNotificationImpl implements NotificationService {
 	private String[] getAdminMail() {
 
 		List<User> admins = userRepository.findUserByUserType(UserType.admin);
+		admins.addAll(userRepository.findUserByUserType(UserType.superAdmin));
 		String[] adminMailList = admins.stream().map(admin -> admin.getEmail()).toArray(String[]::new);
 
 		return adminMailList;
