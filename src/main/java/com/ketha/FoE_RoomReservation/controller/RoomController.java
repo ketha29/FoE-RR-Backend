@@ -39,6 +39,12 @@ public class RoomController {
 		return ResponseEntity.status(response.getStatusCode()).body(response);
 	}
 	
+	@GetMapping("/only-admin-booking")
+	public ResponseEntity<ResponseDto> getOnlyAdminBookingRoom() {
+		ResponseDto response =  roomService.getOnlyAdminBookingRoom();
+		return ResponseEntity.status(response.getStatusCode()).body(response);
+	}
+	
 	@GetMapping("/room-by-id/{roomId}")
 	public ResponseEntity<ResponseDto> getRoomById(@PathVariable int roomId) {
 		ResponseDto response =  roomService.getRoomById(roomId);
