@@ -117,7 +117,7 @@ public class UserServiceImpl implements UserService {
 					List<User> regularUsers = userRepository.findUserByUserType(UserType.regularUser);
 					userList = Stream.concat(userList.stream(), regularUsers.stream()).collect(Collectors.toList());
 				} else {
-					throw new ForbiddenException("Forbidden");
+					userList = userRepository.findUserByUserType(UserType.regularUser);
 				}
 
 				List<UserDto> userDto = userList.stream().map((user) -> Utils.mapUserToUserDto(user))
