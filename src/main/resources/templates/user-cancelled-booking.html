@@ -1,48 +1,72 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body>
-	<h2>FOE Room Reservation</h2>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOE Room Reservation Cancellation Notification</title>
+</head>
+<body
+	style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 20px;">
+	<h2 style="color: #4a90e2; margin-bottom: 20px;">FOE Room
+		Reservation</h2>
 
-	Dear Admin,
-	<br>
-	<p>This is to inform you that a booking has been successfully
-		cancelled by the user.</p>
+	<p style="line-height: 1.6; margin: 0 0 20px;">Dear Admin,</p>
+	<p style="line-height: 1.6; margin: 0 0 20px;">This is to inform
+		you that a booking has been successfully cancelled by a user. The
+		details of the cancelled booking are provided below.</p>
 
-	<h3>Cancelled Booking: Details</h3>
+	<h3 style="color: #d9534f; margin-top: 20px; margin-bottom: 10px;">Cancelled
+		Booking: Details</h3>
 	<div>
-		<table style="font-weight: bold;">
+		<table
+			style="width: 100%; max-width: 600px; border-collapse: collapse; background-color: #fff; border: 1px solid #ddd; margin-bottom: 20px;">
 			<tr>
-				<td style="padding: 3px">Username</td>
-				<td style="border-left: 2px solid red; padding: 5px;"
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5; width: 30%;">Booked For</td>
+				<td
+					style="padding: 10px; border: 1px solid #ddd; color: #ddd; font-weight: bold;"
 					th:text="${userName}"></td>
 			</tr>
 			<tr>
-				<td style="padding: 3px">Booked room</td>
-				<td style="border-left: 2px solid red; padding: 5px;"
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5;">Booked
+					Room</td>
+				<td
+					style="padding: 10px; border: 1px solid #ddd; color: #ddd; font-weight: bold;"
 					th:text="${notification.roomName}"></td>
 			</tr>
 			<tr>
-				<td style="padding: 3px">Cancelled days</td>
-				<td style="border-left: 2px solid red;">
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5;">Cancelled
+					Days</td>
+				<td style="padding: 10px; border: 1px solid #ddd;">
 					<ul style="list-style-type: none; padding: 0; margin: 0;">
-						<li th:each="date : ${notification.bookingDates}" style="margin: 5px;"
+						<li th:each="date : ${notification.bookingDates}"
+							style="margin: 5px 0; color: #ddd; font-weight: bold;"
 							th:text="${date}"></li>
 					</ul>
 				</td>
 			</tr>
 			<tr>
-				<td style="padding: 3px">From time</td>
-				<td style="border-left: 2px solid red; padding: 5px;"
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5;">From
+					Time</td>
+				<td
+					style="padding: 10px; border: 1px solid #ddd; color: #ddd; font-weight: bold;"
 					th:text="${notification.startTime}"></td>
 			</tr>
 			<tr>
-				<td style="padding: 3px">To time</td>
-				<td style="border-left: 2px solid red; padding: 5px;"
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5;">To
+					Time</td>
+				<td
+					style="padding: 10px; border: 1px solid #ddd; color: #ddd; font-weight: bold;"
 					th:text="${notification.endTime}"></td>
 			</tr>
 		</table>
 	</div>
 
-	<br>Thank you for using the FOE Online Room Reservation service.
+	<p style="font-style: italic; color: #777; margin: 0;">Thank you
+		for choosing FoE Room Reservation.</p>
 </body>
 </html>

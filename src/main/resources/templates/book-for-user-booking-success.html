@@ -1,47 +1,73 @@
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body>
-	<h2>FOE Room Reservation</h2>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FoE Room Reservation Admin Booking Confirmation</title>
+</head>
+<body
+	style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 20px;">
+	<h2 style="color: #4a90e2; margin-bottom: 20px;">FoE Room
+		Reservation</h2>
 
-	<p>
-		Dear <span th:text="${userName}"></span>,
+	<p style="line-height: 1.6; margin: 0 0 20px;">
+		Dear <span th:text="${userName}"
+			style="color: #333; font-weight: bold;"></span>,
 	</p>
-	<p>This is to inform you that a booking has been successfully placed by the admin, on your request.</p>
+	<p style="line-height: 1.6; margin: 0 0 20px;">This is to inform
+		you that the following booking has been successfully placed by the
+		admin, based on your request</p>
 
-	<h3>Booking Details</h3>
+	<h3 style="color: #4a90e2; margin-top: 20px; margin-bottom: 10px;">Booking
+		Details</h3>
 	<div>
-		<table style="font-weight: bold;">
+		<table
+			style="width: 100%; max-width: 600px; border-collapse: collapse; background-color: #fff; border: 1px solid #ddd; margin-bottom: 20px;">
 			<tr>
-				<td>Booked Room</td>
-				<td style="border-left: 2px solid blue; padding: 5px;"
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5; width: 30%;">Booked
+					Room</td>
+				<td style="padding: 10px; border: 1px solid #ddd; color: #333; font-weight: bold;"
 					th:text="${notification.roomName}"></td>
 			</tr>
 			<tr>
-				<td>Purpose</td>
-				<td style="border-left: 2px solid blue; padding: 5px;"
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5;">Purpose</td>
+				<td style="padding: 10px; border: 1px solid #ddd; color: #333;font-weight: bold;"
 					th:text="${notification.purpose}"></td>
 			</tr>
 			<tr>
-				<td>Booked Days</td>
-				<td style="border-left: 2px solid blue;">
-					<ul style="list-style-type: none; padding: 0; margin: 0;">
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5;">Booked
+					Days</td>
+				<td style="padding: 10px; border: 1px solid #ddd;">
+					<ul style="list-style-type: none; padding: 0; margin: 0; ">
 						<li th:each="date : ${notification.bookingDates}"
-							th:text="${date}"></li>
+							style="margin: 5px 0; color: #333;font-weight: bold;" th:text="${date}"></li>
 					</ul>
 				</td>
 			</tr>
 			<tr>
-				<td>From Time</td>
-				<td style="border-left: 2px solid blue; padding: 5px;"
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5;">From
+					Time</td>
+				<td style="padding: 10px; border: 1px solid #ddd; color: #333;font-weight: bold;"
 					th:text="${notification.startTime}"></td>
 			</tr>
 			<tr>
-				<td>To Time</td>
-				<td style="border-left: 2px solid blue; padding: 5px;"
+				<td
+					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5;">To
+					Time</td>
+				<td style="padding: 10px; border: 1px solid #ddd; color: #333;font-weight: bold;"
 					th:text="${notification.endTime}"></td>
 			</tr>
 		</table>
 	</div>
-	<br><p>If booking had been placed without your consent, please contact admin.</p>
-	<br>Thank you for using the FOE Online Room Reservation service.
+
+	<p style="line-height: 1.6; margin: 0 0 20px;">If the booking had
+		been placed without your consent, please contact the admin.</p>
+
+	<p style="font-style: italic; color: #777; margin: 0;">Thank you
+		for choosing FOE Room Reservation.</p>
 </body>
 </html>

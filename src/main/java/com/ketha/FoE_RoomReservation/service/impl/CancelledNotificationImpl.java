@@ -62,6 +62,7 @@ public class CancelledNotificationImpl implements NotificationService {
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
 		context.setVariable("userName", loggedUser.getFirstName().concat(" "+loggedUser.getLastName()));
+		context.setVariable("bookedFor", otherUser.getFirstName().concat(" "+otherUser.getLastName()));
 		notifyLoggedUser.add(templateEngine.process("booking-cancelled", context));
 		return notifyLoggedUser;
 	}

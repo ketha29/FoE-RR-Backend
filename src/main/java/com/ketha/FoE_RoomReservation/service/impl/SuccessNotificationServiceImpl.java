@@ -55,7 +55,10 @@ public class SuccessNotificationServiceImpl implements NotificationService {
 
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
-		context.setVariable("userName", loggedUser.getFirstName().concat(" "+loggedUser.getLastName()));
+		context.setVariable("userName", loggedUser.getFirstName().concat(" " + loggedUser.getLastName()));
+		if (otherUser != null) {
+			context.setVariable("bookedFor", otherUser.getFirstName().concat(" " + otherUser.getLastName()));
+		}
 		notifyLoggedUser.add(templateEngine.process("booking-success", context));
 		return notifyLoggedUser;
 	}
@@ -76,7 +79,7 @@ public class SuccessNotificationServiceImpl implements NotificationService {
 
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
-		context.setVariable("userName", otherUser.getFirstName().concat(" "+otherUser.getLastName()));
+		context.setVariable("userName", otherUser.getFirstName().concat(" " + otherUser.getLastName()));
 		notifyRegularUser.add(templateEngine.process("book-for-user-booking-success.html", context));
 
 		return notifyRegularUser;
