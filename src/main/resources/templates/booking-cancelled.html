@@ -24,7 +24,7 @@
 		<table
 			style="width: 100%; max-width: 600px; border-collapse: collapse; background-color: #fff; border: 1px solid #ddd; margin-bottom: 20px;">
 			<tr
-				th:if="${(notification.getLoggedUser().getUserType().toString() == 'admin' or notification.getLoggedUser().getUserType().toString() == 'superAdmin')}">
+				th:if="${notification.getBookForUser() != null && (notification.getLoggedUser().getUserType().toString() == 'admin' || notification.getLoggedUser().getUserType().toString() == 'superAdmin')}">
 				<td
 					style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f5f5f5;">Booked
 					For</td>
