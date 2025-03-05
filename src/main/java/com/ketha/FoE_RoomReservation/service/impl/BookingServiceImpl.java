@@ -418,14 +418,16 @@ public class BookingServiceImpl implements BookingService {
 			if (available && (bookingRequest.getRecurrence() == RecurrenceType.none)) {
 				allow = true;
 			}
-		} else if (user.getUserType() == UserType.admin || user.getUserType() == UserType.superAdmin) {
-			if ((bookingRequest.getRecurrence() == RecurrenceType.none)
-					|| ((bookingRequest.getRecurrence() == RecurrenceType.daily)
-							&& (bookingRequest.getRecurrencePeriod() <= 10))
-					|| ((bookingRequest.getRecurrence() == RecurrenceType.weekly)
-							&& (bookingRequest.getRecurrencePeriod() <= 5))) {
-				allow = true;
-			}
+//			Remove the limit to reccurrence booking by commenting
+			
+//		} else if (user.getUserType() == UserType.admin || user.getUserType() == UserType.superAdmin) {
+//			if ((bookingRequest.getRecurrence() == RecurrenceType.none)
+//					|| ((bookingRequest.getRecurrence() == RecurrenceType.daily)
+//							&& (bookingRequest.getRecurrencePeriod() <= 10))
+//					|| ((bookingRequest.getRecurrence() == RecurrenceType.weekly)
+//							&& (bookingRequest.getRecurrencePeriod() <= 5))) {
+//				allow = true;
+//			}
 		}
 		return allow;
 	}
