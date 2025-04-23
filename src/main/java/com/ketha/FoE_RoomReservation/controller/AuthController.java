@@ -32,18 +32,13 @@ public class AuthController {
 	}
 
 	@GetMapping("/current-user")
-	public String currentUser(Authentication authentication) {
-		if (authentication != null) {
-			return "User grants: " + (SecurityContextHolder.getContext().getAuthentication().getAuthorities());
-		} else {
-			return "No user is logged in";
-		}
+	public long currentUser() {
+		return userService.getLoggedUser().getUserId();
 	}
 	
 	@GetMapping("/userinfo")
     public String userinfo(Authentication authentication) {
 		OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
-		oauth2Token.setAuthenticated(false);
 		return oauth2Token.toString();
 		
     }

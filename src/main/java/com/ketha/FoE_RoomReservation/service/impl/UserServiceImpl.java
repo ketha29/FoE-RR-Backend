@@ -185,6 +185,27 @@ public class UserServiceImpl implements UserService {
 		}
 		return response;
 	}
+	
+	public ResponseDto getLoggedUser() {
+		ResponseDto response = new ResponseDto();
+		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if(authentication instanceof OAuth2AuthenticationToken) {
+				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+				OAuth2User oauth2User = oauthToken.getPrincipal();
+				
+				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+						.orElseThrow(() -> new CustomException("NotFound"));
+				
+				response.setUserId(loginUser.getUserId());
+				response.setStatusCode(200);
+				response.setMessage("Successful");
+			}
+		} catch (Exception e) {
+			response.setStatusCode(401);
+		}
+		return response;
+	}
 
 	@Override
 	public ResponseDto getUserbyFullName(String fullName) {

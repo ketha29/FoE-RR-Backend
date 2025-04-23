@@ -34,7 +34,7 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http.csrf(AbstractHttpConfigurer::disable).cors(cors -> cors.configurationSource(request -> {
 			CorsConfiguration config = new CorsConfiguration();
-			config.setAllowedOrigins(List.of(allowedCrossOrigin)); // Allow the frontend origin
+			config.setAllowedOrigins(List.of("http://localhost:5173")); // Allow the frontend origin
 			config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed HTTP methods
 			config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allowed headers
 			config.setAllowCredentials(true); // Allow credentials (cookies, etc.)
