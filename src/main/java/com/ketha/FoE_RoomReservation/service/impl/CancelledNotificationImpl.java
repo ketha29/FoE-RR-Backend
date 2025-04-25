@@ -46,7 +46,7 @@ public class CancelledNotificationImpl implements NotificationService {
 		UserDto bookByUser	= (notificationDto.getBookedByUser().getUserType() == UserType.regularUser)? notificationDto.getBookedByUser():null;
 		loggedUser = notificationDto.getLoggedUser();
 
-		if (loggedUser.getUserType() == UserType.admin) {
+		if (loggedUser.getUserType() == UserType.admin || loggedUser.getUserType() == UserType.superAdmin) {
 			otherUser = (bookForUser != null) ? bookForUser : bookByUser;
 		} 
 	}
@@ -61,7 +61,10 @@ public class CancelledNotificationImpl implements NotificationService {
 		
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
-		context.setVariable("userName", loggedUser.getUserName());
+		context.setVariable("userName", loggedUser.getFirstName().concat(" "+loggedUser.getLastName()));
+		if(otherUser!=null) {
+			context.setVariable("bookedFor", otherUser.getFirstName().concat(" "+otherUser.getLastName()));
+		}
 		notifyLoggedUser.add(templateEngine.process("booking-cancelled", context));
 		return notifyLoggedUser;
 	}
@@ -82,7 +85,7 @@ public class CancelledNotificationImpl implements NotificationService {
 
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
-		context.setVariable("userName", otherUser.getUserName());
+		context.setVariable("userName", otherUser.getFirstName().concat(" "+otherUser.getLastName()));
 		notifyRegularUser.add(templateEngine.process("Admin-cancelled-booking", context));
 
 		return notifyRegularUser;
@@ -95,7 +98,7 @@ public class CancelledNotificationImpl implements NotificationService {
 
 		Context context = new Context();
 		context.setVariable("notification", notificationDto);
-		context.setVariable("userName", loggedUser.getUserName());
+		context.setVariable("userName", loggedUser.getFirstName().concat(" "+loggedUser.getLastName()));
 		notifyAdminUser.add(templateEngine.process("user-cancelled-booking", context));
 		return notifyAdminUser;
 	}
@@ -123,6 +126,7 @@ public class CancelledNotificationImpl implements NotificationService {
 	private String[] getAdminMail() {
 
 		List<User> admins = userRepository.findUserByUserType(UserType.admin);
+		admins.addAll(userRepository.findUserByUserType(UserType.superAdmin));
 		String[] adminMailList = admins.stream().map(admin -> admin.getEmail()).toArray(String[]::new);
 
 		return adminMailList;

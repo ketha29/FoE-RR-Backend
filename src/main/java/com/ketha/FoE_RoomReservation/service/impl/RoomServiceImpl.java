@@ -3,6 +3,7 @@ package com.ketha.FoE_RoomReservation.service.impl;
 import java.sql.Date;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -40,6 +41,22 @@ public class RoomServiceImpl implements RoomService{
 //		    } else {
 //		        System.out.println("Rooms found: " + roomList.size());
 //		    }
+			List<RoomDto> roomDtoList = Utils.mapRoomListToRoomListDto(roomList);
+			response.setStatusCode(200);
+			response.setMessage("Successful");
+			response.setRoomList(roomDtoList);
+		} catch (Exception e) {
+			response.setStatusCode(500);
+			response.setMessage("Error getting rooms: " + e.getMessage());
+		}
+		return response;
+	}
+	
+	public ResponseDto getOnlyAdminBookingRoom() {
+		ResponseDto response = new ResponseDto();
+		
+		try {
+			List<Room> roomList = roomRepository.findByIsOnlyBookedByAdmin(true);
 			List<RoomDto> roomDtoList = Utils.mapRoomListToRoomListDto(roomList);
 			response.setStatusCode(200);
 			response.setMessage("Successful");

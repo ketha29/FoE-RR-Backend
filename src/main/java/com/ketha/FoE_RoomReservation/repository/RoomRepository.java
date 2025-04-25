@@ -15,6 +15,7 @@ import com.ketha.FoE_RoomReservation.model.Room;
 public interface RoomRepository extends JpaRepository<Room, Long> {
 	
 	Optional<Room> findByRoomName(String room);
+	List<Room> findByIsOnlyBookedByAdmin(boolean True);
 	
 	boolean existsByRoomName(String roomName);
 

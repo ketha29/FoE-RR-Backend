@@ -10,7 +10,6 @@ public class Utils {
 				.userId(user.getUserId())
 				.email(user.getEmail())
 				.phoneNo(user.getPhoneNo())
-				.userName(user.getUserName())
 				.userType(user.getUserType())
 				.build();
 		return userDto;

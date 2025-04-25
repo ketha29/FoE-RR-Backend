@@ -3,7 +3,9 @@ package com.ketha.FoE_RoomReservation.service.impl;
 import java.sql.Date;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -266,20 +268,22 @@ public class BookingServiceImpl implements BookingService {
 						.bookedByUser(Utils.mapUserToUserDto(booking.getUser()))
 						.bookingDates(Utils.formatDateList(bookingDates))
 						.startTime(Utils.formatTime(booking.getStartTime()))
-						.endTime(Utils.formatTime(booking.getEndTime())).roomName(booking.getRoom().getRoomName())
+						.endTime(Utils.formatTime(booking.getEndTime()))
+						.roomName(booking.getRoom().getRoomName())
 						.purpose(booking.getDetails()).build();
 
 				// If available set BookForUser
 				if (booking.getBookedForUser() != null) {
 					notificationDto.setBookForUser(Utils.mapUserToUserDto(booking.getBookedForUser()));
 				}
-
+				
 				// Delete booking Implementation
 				if (!cancelSingleBooking || recurringBookings.size() == 1) {
 					bookingRepository.deleteAllById(bookingIds);
 					eventRepository.deleteById(eventId);
 				} else {
 					bookingRepository.deleteById(bookingId);
+					notificationDto.setBookingDates(Utils.formatDateList(Arrays.asList(booking.getDate())));
 				}
 
 				List<BookingDto> bookingDto = Utils.mapBookingListToBookingListDto(recurringBookings);

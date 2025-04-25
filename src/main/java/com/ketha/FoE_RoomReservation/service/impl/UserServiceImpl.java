@@ -9,6 +9,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,6 @@ import com.ketha.FoE_RoomReservation.exception.ForbiddenException;
 import com.ketha.FoE_RoomReservation.model.User;
 import com.ketha.FoE_RoomReservation.model.User.UserType;
 import com.ketha.FoE_RoomReservation.repository.UserRepository;
-import com.ketha.FoE_RoomReservation.security.JwtService;
 import com.ketha.FoE_RoomReservation.service.interfac.UserService;
 import com.ketha.FoE_RoomReservation.utils.Utils;
 
@@ -28,17 +28,12 @@ import com.ketha.FoE_RoomReservation.utils.Utils;
 public class UserServiceImpl implements UserService {
 
 	private UserRepository userRepository;
-//	private PasswordEncoder passwordEncoder;
-//	private AuthenticationManager authenticationManager;
-	private JwtService jwtService;
-//	private CustomUserDetailsService customUserDetailsService;
 
 	// Setter for dependency injection
 	// UserService has its UserRepository dependency set at the time of creation
 	@Autowired
-	public UserServiceImpl(UserRepository userRepository, JwtService jwtService) {
+	public UserServiceImpl(UserRepository userRepository) {
 		this.userRepository = userRepository;
-		this.jwtService = jwtService;
 	}
 
 	// Register user
@@ -53,21 +48,11 @@ public class UserServiceImpl implements UserService {
 			if (userRepository.existsByEmail(user.getEmail())) {
 				throw new CustomException(user.getEmail() + " Already exists");
 			}
-			if (user.getUserName() == null || user.getUserName().isBlank() || user.getPassword() == null
-					|| user.getPassword().isBlank()) {
-				throw new BadRequestException("User name or password shouldn't be empty");
-			}
-//			if(user.getUserName() == null || user.getUserName().isBlank() || user.getPassword() == null || user.getPassword().isBlank()) {
-//	            throw new BadRequestException("User name or password shouldn't be empty");
-//			}
-//			user.setPassword(passwordEncoder.encode(user.getPassword()));
 			User savedUser = userRepository.save(user);
-//			var jwtToken = jwtService.generateToken(user);
 			UserDto userDto = Utils.mapUserToUserDto(savedUser);
 			response.setStatusCode(200);
 			response.setMessage("User added successfully");
 			response.setUser(userDto);
-//			response.setToken(jwtToken);
 		} catch (CustomException e) {
 			response.setStatusCode(404);
 			response.setMessage(e.getMessage());
@@ -90,11 +75,14 @@ public class UserServiceImpl implements UserService {
 			OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 			var user = userRepository.findByEmail(oAuth2User.getAttribute("email"))
 					.orElseThrow(() -> new BadCredentialsException(null));
-			var jwtToken = jwtService.generateToken(oAuth2User);
+						
+			if (authentication != null && authentication instanceof OAuth2AuthenticationToken) {
+				DefaultOidcUser principal = (DefaultOidcUser) authentication.getPrincipal();
+				response.setToken(principal.getAccessTokenHash());
+			}
 			response.setUserType(user.getUserType());
 			response.setStatusCode(200);
 			response.setMessage("User login successful");
-			response.setToken(jwtToken);
 			response.setUserId(user.getUserId());
 
 		} catch (BadCredentialsException e) {
@@ -129,7 +117,7 @@ public class UserServiceImpl implements UserService {
 					List<User> regularUsers = userRepository.findUserByUserType(UserType.regularUser);
 					userList = Stream.concat(userList.stream(), regularUsers.stream()).collect(Collectors.toList());
 				} else {
-					throw new ForbiddenException("Forbidden");
+					userList = userRepository.findUserByUserType(UserType.regularUser);
 				}
 
 				List<UserDto> userDto = userList.stream().map((user) -> Utils.mapUserToUserDto(user))
@@ -212,10 +200,10 @@ public class UserServiceImpl implements UserService {
 				OAuth2User oauth2User = oauthToken.getPrincipal();
 
 				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
-						.orElseThrow(() -> new CustomException("NotFound"));
+						.orElseThrow(() -> new CustomException("Not Found"));
 
 				List<User> userList = null;
-				if (loginUser.getUserType().equals(UserType.admin) || loginUser.getUserType().equals(UserType.admin)) {
+				if (loginUser.getUserType().equals(UserType.admin) || loginUser.getUserType().equals(UserType.superAdmin)) {
 					userList = userRepository.findByName(regexPattern);
 					List<UserDto> userDto = userList.stream().filter(user -> user.getUserType() == UserType.regularUser)
 							.map((user) -> Utils.mapUserToUserDto(user)).collect(Collectors.toList());

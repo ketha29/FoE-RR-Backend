@@ -3,6 +3,7 @@ package com.ketha.FoE_RoomReservation.security;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -17,7 +18,10 @@ import org.springframework.web.cors.CorsConfiguration;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
+	
+	@Value("${frontend.url}")
+	private String allowedCrossOrigin;
+	
 	private CustomAuthenticationSuccessHandler successHandler;
 
 	@Autowired
