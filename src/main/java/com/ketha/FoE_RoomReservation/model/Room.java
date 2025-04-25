@@ -34,6 +34,8 @@ public class Room {
 	@Column(unique = true, nullable = false)
 	private String roomName;
 	private String description;
+	private boolean isOnlyBookedByAdmin;
+	
 	
 	@OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Booking> bookings = new ArrayList<Booking>();

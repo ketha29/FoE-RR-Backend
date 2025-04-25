@@ -19,12 +19,10 @@ import org.springframework.web.cors.CorsConfiguration;
 public class SecurityConfig {
 
 	private CustomAuthenticationSuccessHandler successHandler;
-	private JwtAuthFilter jwtAuthFilter;
 
 	@Autowired
-	public SecurityConfig(CustomAuthenticationSuccessHandler successHandler, JwtAuthFilter jwtAuthFilter) {
+	public SecurityConfig(CustomAuthenticationSuccessHandler successHandler) {
 		this.successHandler = successHandler;
-		this.jwtAuthFilter = jwtAuthFilter;
 	}
 
 	// Customizing the default security configuration
@@ -32,7 +30,7 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http.csrf(AbstractHttpConfigurer::disable).cors(cors -> cors.configurationSource(request -> {
 			CorsConfiguration config = new CorsConfiguration();
-			config.setAllowedOrigins(List.of("http://localhost:5173")); // Allow the frontend origin
+			config.setAllowedOrigins(List.of("https://eeu.pdn.ac.lk:3001")); // Allow the frontend origin
 			config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed HTTP methods
 			config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allowed headers
 			config.setAllowCredentials(true); // Allow credentials (cookies, etc.)
@@ -45,6 +43,6 @@ public class SecurityConfig {
 						.deleteCookies("JSESSIONID", "OAuth2-Token")
 						.clearAuthentication(true)
 						.invalidateHttpSession(true))
-				.addFilterBefore(jwtAuthFilter, OAuth2LoginAuthenticationFilter.class).build();
+				.build();
 	}
 }

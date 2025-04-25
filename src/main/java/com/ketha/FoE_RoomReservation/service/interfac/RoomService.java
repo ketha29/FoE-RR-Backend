@@ -17,7 +17,7 @@ public interface RoomService {
 	
 //	ResponseDto getAvailableRoomsByDate(Time startTime, Time endTime, Date date);
 	
-	ResponseDto addRoom(int capacity, String roomName, String description);
+	ResponseDto addRoom(int capacity, String roomName, String description,boolean isOnlyBookedByAdmin);
 	
 	ResponseDto deleteRoom(long roomId);
 	

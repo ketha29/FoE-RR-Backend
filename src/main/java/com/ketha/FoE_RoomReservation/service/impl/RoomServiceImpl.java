@@ -126,7 +126,7 @@ public class RoomServiceImpl implements RoomService{
 
 
 	@Override
-	public ResponseDto addRoom(int capacity, String roomName, String description) {
+	public ResponseDto addRoom(int capacity, String roomName, String description, boolean isOnlyBookedByAdmin) {
 		ResponseDto response = new ResponseDto();
 
 		try {
@@ -144,6 +144,7 @@ public class RoomServiceImpl implements RoomService{
 			Room room = new Room();
 			room.setCapacity(capacity);
 			room.setRoomName(roomName);
+			room.setOnlyBookedByAdmin(isOnlyBookedByAdmin);
 			room.setDescription(description);
 			Room savedRoom = roomRepository.save(room);
 			RoomDto roomDto = Utils.mapRoomToRoomDto(savedRoom);
