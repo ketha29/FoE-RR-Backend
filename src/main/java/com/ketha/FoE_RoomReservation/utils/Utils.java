@@ -21,7 +21,6 @@ public class Utils {
 
 		userDto.setUserId(user.getUserId());
 		userDto.setEmail(user.getEmail());
-		userDto.setPhoneNo(user.getPhoneNo());
 		userDto.setUserType(user.getUserType());
 		userDto.setFirstName(user.getFirstName());
 		userDto.setLastName(user.getLastName());
@@ -99,7 +98,6 @@ public class Utils {
 
 		userDto.setUserId(user.getUserId());
 		userDto.setEmail(user.getEmail());
-		userDto.setPhoneNo(user.getPhoneNo());
 		userDto.setUserType(user.getUserType());
 
 		if (!user.getBookings().isEmpty()) {

@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -66,7 +67,7 @@ public class UserServiceImpl implements UserService {
 		return response;
 	}
 
-	// User login
+//	 User login
 	@Override
 	public ResponseDto login(Authentication authentication) {
 		ResponseDto response = new ResponseDto();
@@ -75,7 +76,7 @@ public class UserServiceImpl implements UserService {
 			OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 			var user = userRepository.findByEmail(oAuth2User.getAttribute("email"))
 					.orElseThrow(() -> new BadCredentialsException(null));
-						
+
 			if (authentication != null && authentication instanceof OAuth2AuthenticationToken) {
 				DefaultOidcUser principal = (DefaultOidcUser) authentication.getPrincipal();
 				response.setToken(principal.getAccessTokenHash());
@@ -102,11 +103,9 @@ public class UserServiceImpl implements UserService {
 
 		try {
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			if (authentication instanceof OAuth2AuthenticationToken) {
-				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-				OAuth2User oauth2User = oauthToken.getPrincipal();
+			if (authentication instanceof UsernamePasswordAuthenticationToken) {
 
-				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+				User loginUser = userRepository.findByEmail(authentication.getPrincipal().toString())
 						.orElseThrow(() -> new CustomException("NotFound"));
 
 				List<User> userList = null;
@@ -149,11 +148,9 @@ public class UserServiceImpl implements UserService {
 
 		try {
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			if (authentication instanceof OAuth2AuthenticationToken) {
-				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-				OAuth2User oauth2User = oauthToken.getPrincipal();
-
-				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+			if (authentication instanceof UsernamePasswordAuthenticationToken) {
+				
+				User loginUser = userRepository.findByEmail(authentication.getPrincipal().toString())
 						.orElseThrow(() -> new CustomException("NotFound"));
 
 				User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
@@ -186,6 +183,41 @@ public class UserServiceImpl implements UserService {
 		return response;
 	}
 
+	public ResponseDto getLoggedUser() {
+		ResponseDto response = new ResponseDto();
+		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if (authentication instanceof UsernamePasswordAuthenticationToken) {
+				
+				User loginUser = userRepository.findByEmail(authentication.getPrincipal().toString())
+						.orElseThrow(() -> new CustomException("NotFound"));
+
+				response.setUserId(loginUser.getUserId());
+				response.setStatusCode(200);
+				response.setMessage("Successful");
+			}
+		} catch (Exception e) {
+			response.setStatusCode(401);
+		}
+		return response;
+	}
+
+	public ResponseDto getUserByEmail(String email) {
+		ResponseDto response = new ResponseDto();
+		try {
+
+			User loginUser = userRepository.findByEmail(email).orElseThrow(() -> new CustomException("NotFound"));
+
+			response.setUser(Utils.mapUserToUserDto(loginUser));
+			response.setStatusCode(200);
+			response.setMessage("Successful");
+		} catch (Exception e) {
+			response.setStatusCode(401);
+			response.setMessage("Unauthorized");
+		}
+		return response;
+	}
+
 	@Override
 	public ResponseDto getUserbyFullName(String fullName) {
 		ResponseDto response = new ResponseDto();
@@ -195,15 +227,14 @@ public class UserServiceImpl implements UserService {
 		regexPattern = names.length > 1 ? names[1] : String.join("|", names); // Handling null LastName
 		try {
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			if (authentication instanceof OAuth2AuthenticationToken) {
-				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-				OAuth2User oauth2User = oauthToken.getPrincipal();
-
-				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+			if (authentication instanceof UsernamePasswordAuthenticationToken) {
+				
+				User loginUser = userRepository.findByEmail(authentication.getPrincipal().toString())
 						.orElseThrow(() -> new CustomException("Not Found"));
 
 				List<User> userList = null;
-				if (loginUser.getUserType().equals(UserType.admin) || loginUser.getUserType().equals(UserType.superAdmin)) {
+				if (loginUser.getUserType().equals(UserType.admin)
+						|| loginUser.getUserType().equals(UserType.superAdmin)) {
 					userList = userRepository.findByName(regexPattern);
 					List<UserDto> userDto = userList.stream().filter(user -> user.getUserType() == UserType.regularUser)
 							.map((user) -> Utils.mapUserToUserDto(user)).collect(Collectors.toList());
@@ -236,11 +267,9 @@ public class UserServiceImpl implements UserService {
 
 		try {
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			if (authentication instanceof OAuth2AuthenticationToken) {
-				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-				OAuth2User oauth2User = oauthToken.getPrincipal();
+			if (authentication instanceof UsernamePasswordAuthenticationToken) {
 
-				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+				User loginUser = userRepository.findByEmail(authentication.getPrincipal().toString())
 						.orElseThrow(() -> new CustomException("NotFound"));
 
 				User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("NotFound"));
@@ -284,11 +313,9 @@ public class UserServiceImpl implements UserService {
 		ResponseDto response = new ResponseDto();
 		try {
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			if (authentication instanceof OAuth2AuthenticationToken) {
-				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-				OAuth2User oauth2User = oauthToken.getPrincipal();
+			if (authentication instanceof UsernamePasswordAuthenticationToken) {
 
-				User loginUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+				User loginUser = userRepository.findByEmail(authentication.getPrincipal().toString())
 						.orElseThrow(() -> new CustomException("NotFound"));
 				if (loginUser.getUserType().equals(UserType.admin)
 						|| loginUser.getUserType().equals(UserType.superAdmin)) {
