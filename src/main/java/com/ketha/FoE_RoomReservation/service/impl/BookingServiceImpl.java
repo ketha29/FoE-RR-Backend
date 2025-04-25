@@ -5,14 +5,12 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.ketha.FoE_RoomReservation.dto.BookingDto;
@@ -97,11 +95,9 @@ public class BookingServiceImpl implements BookingService {
 
 		try {
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			if (authentication instanceof OAuth2AuthenticationToken) {
-				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-				OAuth2User oauth2User = oauthToken.getPrincipal();
+			if (authentication instanceof UsernamePasswordAuthenticationToken) {
 
-				User user = userRepository.findByEmail(oauth2User.getAttribute("email"))
+				User user = userRepository.findByEmail(authentication.getPrincipal().toString())
 						.orElseThrow(() -> new CustomException("NotFound"));
 				Room room = roomRepository.findByRoomName(roomName)
 						.orElseThrow(() -> new CustomException("Room not found"));
@@ -245,11 +241,9 @@ public class BookingServiceImpl implements BookingService {
 		ResponseDto response = new ResponseDto();
 		try {
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			if (authentication instanceof OAuth2AuthenticationToken) {
-				OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-				OAuth2User oauth2User = oauthToken.getPrincipal();
+			if (authentication instanceof UsernamePasswordAuthenticationToken) {
 
-				User loggedUser = userRepository.findByEmail(oauth2User.getAttribute("email"))
+				User loggedUser = userRepository.findByEmail(authentication.getPrincipal().toString())
 						.orElseThrow(() -> new CustomException("NotFound"));
 
 				Booking booking = bookingRepository.findById(bookingId)
@@ -428,6 +422,8 @@ public class BookingServiceImpl implements BookingService {
 //							&& (bookingRequest.getRecurrencePeriod() <= 5))) {
 //				allow = true;
 //			}
+		} else if (user.getUserType() == UserType.admin || user.getUserType() == UserType.superAdmin) {
+			allow = true;
 		}
 		return allow;
 	}

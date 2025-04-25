@@ -10,9 +10,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+
+import com.ketha.FoE_RoomReservation.service.impl.JwtTokenProvider;
 
 @Configuration
 @EnableWebSecurity
@@ -23,10 +25,12 @@ public class SecurityConfig {
 	private String allowedCrossOrigin;
 	
 	private CustomAuthenticationSuccessHandler successHandler;
+	private JwtTokenProvider jwtTokenProvider;
 
 	@Autowired
-	public SecurityConfig(CustomAuthenticationSuccessHandler successHandler) {
+	public SecurityConfig(CustomAuthenticationSuccessHandler successHandler, JwtTokenProvider jwtTokenProvider) {
 		this.successHandler = successHandler;
+		this.jwtTokenProvider = jwtTokenProvider;
 	}
 
 	// Customizing the default security configuration
@@ -39,10 +43,11 @@ public class SecurityConfig {
 			config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Allowed headers
 			config.setAllowCredentials(true); // Allow credentials (cookies, etc.)
 			return config;
-		})).authorizeHttpRequests(request -> request.requestMatchers("/user/**", "room/**", "/booking/**", "/auth/**")
+		})).authorizeHttpRequests(request -> request.requestMatchers("/auth/refresh","/user/**", "/room/**", "/booking/**", "/auth/**")
 				.permitAll().anyRequest().authenticated())
 				.oauth2Login(oauth2 -> oauth2
 						.successHandler(successHandler))
+				.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),UsernamePasswordAuthenticationFilter.class)
 				.logout((logout) -> logout
 						.deleteCookies("JSESSIONID", "OAuth2-Token")
 						.clearAuthentication(true)
