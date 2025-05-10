@@ -403,7 +403,8 @@ public class BookingServiceImpl implements BookingService {
 				}
 				
 				if (bookingRequest.getStartTime().toLocalTime().isBefore(LocalTime.parse("08:00:00"))
-						|| bookingRequest.getEndTime().toLocalTime().isAfter(LocalTime.parse("17:00:00"))) {
+						|| bookingRequest.getEndTime().toLocalTime().isAfter(LocalTime.parse("17:00:00"))
+						|| bookingRequest.getEndTime().toLocalTime().isAfter(LocalTime.now().minusHours(4))) {
 					available = false;
 					break;
 				}
