@@ -407,6 +407,11 @@ public class BookingServiceImpl implements BookingService {
 					available = false;
 					break;
 				}
+				// Allow regular user to book in advance of 4 hours
+				if(bookingRequest.getDate().toLocalDate().isEqual(today.toLocalDate()) && bookingRequest.getStartTime().toLocalTime().isBefore(LocalTime.now().plusHours(1))) {
+					available = false;
+					throw new CustomException("Booking should be placed in advance of 4 hours");
+				}
 			}
 
 			if (available && (bookingRequest.getRecurrence() == RecurrenceType.none)) {
