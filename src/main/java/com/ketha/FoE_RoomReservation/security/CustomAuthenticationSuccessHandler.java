@@ -31,13 +31,10 @@ import jakarta.servlet.http.HttpSession;
 
 @Component
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
-
-	@Value("${frontend.url}")
-	private String frontEndUrl;
-
+	private String frontEndUrl = "http://localhost:5173";
 	private UserRepository userRepository;
 	private JwtTokenProvider jwtTokenProvider;
-	
+
 	@Autowired
 	CustomAuthenticationSuccessHandler(UserRepository userRepository, JwtTokenProvider jwtTokenProvider) {
 		this.userRepository = userRepository;
@@ -49,30 +46,35 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 			Authentication authentication) throws IOException, ServletException {
 
 		OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+
+		System.out.print("\nPrinting OAUTH user" + oAuth2User + "\n");
+
 		String email = oAuth2User.getAttribute("email");
 		if (userRepository.existsByEmail(email)) {
 			// Load the user
 			User user = userRepository.findByEmail(email).orElseThrow(() -> new CustomException("User not found"));
 
-//			// Grant authority
-//			List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-//			oAuth2User.getAuthorities().forEach(ga -> authorities.add(ga));
-//			user.getAuthorities().forEach(ga -> authorities.add(ga));
-//
-//			OAuth2AuthenticationToken updatedAuthentication = new OAuth2AuthenticationToken(oAuth2User, authorities,
-//					"sub");
-//			SecurityContextHolder.getContext().setAuthentication(updatedAuthentication);
+			// // Grant authority
+			// List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+			// oAuth2User.getAuthorities().forEach(ga -> authorities.add(ga));
+			// user.getAuthorities().forEach(ga -> authorities.add(ga));
+			//
+			// OAuth2AuthenticationToken updatedAuthentication = new
+			// OAuth2AuthenticationToken(oAuth2User, authorities,
+			// "sub");
+			// SecurityContextHolder.getContext().setAuthentication(updatedAuthentication);
 
 			// Remove the OAuthUser
 			SecurityContextHolder.clearContext();
-			
+
 			// Generate tokens
 			String accessToken = jwtTokenProvider.generateAccessToken(Utils.mapUserToUserDto(user));
 			String refreshToken = jwtTokenProvider.generateRefreshToken(Utils.mapUserToUserDto(user));
-			
-			UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user.getEmail(),null,user.getAuthorities());
+
+			UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user.getEmail(),
+					null, user.getAuthorities());
 			SecurityContextHolder.getContext().setAuthentication(authToken);
-			
+
 			// Set refresh token as HttpOnly cookie
 			ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
 					.httpOnly(true)
@@ -85,9 +87,10 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 			response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
 			// Redirect to frontend with access token
-			String redirectUrl = frontEndUrl + "/oauth-success?token=" + URLEncoder.encode(accessToken, "UTF-8");
-//			redirectStrategy.sendRedirect(request, response, redirectUrl);
-			
+			String redirectUrl = "http://localhost:5173" + "/oauth-success?token="
+					+ URLEncoder.encode(accessToken, "UTF-8");
+			// redirectStrategy.sendRedirect(request, response, redirectUrl);
+
 			response.sendRedirect(redirectUrl); // Redirect user to the page after login
 		} else {
 
@@ -103,6 +106,5 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 			response.sendRedirect("/login-error");
 		}
 	}
-	
-	
+
 }

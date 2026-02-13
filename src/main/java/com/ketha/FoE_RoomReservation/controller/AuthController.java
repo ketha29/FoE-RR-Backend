@@ -62,14 +62,16 @@ public class AuthController {
 	}
 
 	@GetMapping("/refresh")
-	public ResponseEntity<ResponseDto> refresh(@CookieValue(name = "refreshToken", required = false) String oldRefreshToken,
+	public ResponseEntity<ResponseDto> refresh(
+			@CookieValue(name = "refreshToken", required = false) String oldRefreshToken,
 			HttpServletResponse response) {
-		
+				
+		System.err.println("Refresh Token End Point Called");
 		// If refresh token is not available just pass it
-		if(oldRefreshToken==null) {
+		if (oldRefreshToken == null) {
 			return ResponseEntity.ok().build();
 		}
-		
+
 		// Validate the refresh token
 		if (!jwtTokenProvider.validateToken(oldRefreshToken)) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -78,14 +80,14 @@ public class AuthController {
 		// Get the user from token
 		String username = jwtTokenProvider.getUsernameFromToken(oldRefreshToken);
 		UserDto user = userService.getUserByEmail(username).getUser();
-		
+
 		UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-				user.getEmail(), 
-				null, 
+				user.getEmail(),
+				null,
 				Collections.singletonList(new SimpleGrantedAuthority(user.getUserType().toString())));
-		
+
 		SecurityContextHolder.getContext().setAuthentication(authToken);
-		
+
 		// Generate new tokens
 		String accessToken = jwtTokenProvider.generateAccessToken(user);
 		String refreshToken = jwtTokenProvider.generateRefreshToken(user);
@@ -101,7 +103,7 @@ public class AuthController {
 	@PostMapping("/logout")
 	public ResponseEntity<Void> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken,
 			HttpServletResponse response) {
-		
+
 		// Immediately invalidate the cookie
 		ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
 				.httpOnly(false)
@@ -110,7 +112,7 @@ public class AuthController {
 				.maxAge(0)
 				.sameSite("Lax")
 				.build();
-		response.addHeader(HttpHeaders.SET_COOKIE,cookie.toString());
+		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 		System.err.println("Logged out");
 		return ResponseEntity.noContent().build();
 	}

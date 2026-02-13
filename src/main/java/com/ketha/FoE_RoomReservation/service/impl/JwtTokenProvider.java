@@ -21,7 +21,7 @@ import java.security.Key;
 @Service
 public class JwtTokenProvider {
 
-	private final Key key;
+    private final Key key;
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
 
@@ -34,32 +34,31 @@ public class JwtTokenProvider {
             throw new IllegalArgumentException("JWT secret is missing");
         }
 
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        try {
+            byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+            
+            // Changed to 32 bytes (256 bits) for HS256
+            if (keyBytes.length < 32) {
+                throw new IllegalArgumentException(
+                    "JWT secret must be at least 256 bits (32 bytes) for HS256. " +
+                    "Current: " + (keyBytes.length * 8) + " bits");
+            }
+            
+            this.key = Keys.hmacShaKeyFor(keyBytes);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid JWT secret configuration", e);
+        }
         this.accessTokenExpiration = accessTokenExpiration;
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
-    public String generateAccessToken(Authentication authentication) {
-        final String authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
-        return Jwts.builder()
-                .setSubject(authentication.getName())
-                .claim("roles", authorities)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
-                .signWith(key,SignatureAlgorithm.HS512)
-                .compact();
-    }
-    
     public String generateAccessToken(UserDto user) {       
         return Jwts.builder()
                 .setSubject(user.getEmail())
                 .claim("roles", user.getUserType())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
-                .signWith(key,SignatureAlgorithm.HS512)
+                .signWith(key,SignatureAlgorithm.HS256)
                 .compact();
     }
     
@@ -68,7 +67,7 @@ public class JwtTokenProvider {
                 .setSubject(user.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
-                .signWith(key,SignatureAlgorithm.HS512)
+                .signWith(key,SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -77,7 +76,7 @@ public class JwtTokenProvider {
                 .setSubject(authentication.getName())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
-                .signWith(key,SignatureAlgorithm.HS512)
+                .signWith(key,SignatureAlgorithm.HS256)
                 .compact();
     }
 
